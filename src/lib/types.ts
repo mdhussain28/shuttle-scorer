@@ -6,6 +6,7 @@ export type EntryType = "singles" | "doubles";
 
 export interface Tournament {
   id: string;
+  owner_id?: string;
   name: string;
   venue: string | null;
   start_date: string | null;
@@ -79,4 +80,11 @@ export function entryLabel(e: Entry): string {
 
 export function entryPlayers(e: Entry): string[] {
   return e.entry_type === "doubles" ? [e.player1, e.player2 ?? ""] : [e.player1];
+}
+
+export interface TournamentMember {
+  tournament_id: string;
+  user_id: string;
+  email: string;
+  created_at: string;
 }

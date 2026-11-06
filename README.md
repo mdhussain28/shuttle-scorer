@@ -14,6 +14,7 @@ Badminton tournament and match scoring. Next.js (App Router) + Supabase, built t
 - **Golden point** (no deuce) can be switched on for any match: at 20-20 in a 21-point set the next point wins.
 - **Tie-break rules are selectable** per tournament: for two level teams use head-to-head or a decider match; for three or more use set and points difference or decider matches.
 - **Knockout stage**: when every pool match is played, choose semi-finals or quarter-finals. The app maps the teams across pools (for example Group A winner vs Group B runner-up), builds the bracket, and moves winners forward through the final and third-place match.
+- **Umpire logins**: the organiser creates an email and password for each umpire on the Tournament page. Umpires can sign in only with those details (public sign-up stays off), see only the tournaments they were added to, and can start and score matches there. They cannot change teams, categories, pools or rules, create the knockout stage, or delete anything.
 - Tournament data (and casual matches) are deleted automatically **3 months** after creation.
 
 ## 1. Set up Supabase (5 minutes)
@@ -25,6 +26,12 @@ Badminton tournament and match scoring. Next.js (App Router) + Supabase, built t
 3. **Authentication -> Users -> Add user**: create your organiser login (email + password). Tick "Auto confirm user".
 4. **Authentication -> Sign In / Providers -> Email**: switch **off** "Allow new users to sign up" so nobody else can create an account.
 5. **Project Settings -> API**: copy the **Project URL**, the **anon public** key and the **service_role** key.
+
+### Umpires
+
+Nothing extra to configure beyond `SUPABASE_SERVICE_ROLE_KEY` (already needed for the cleanup job). Open a tournament, find **Umpires**, enter the umpire's email, keep or change the generated password, and press **Create umpire login**. Copy the login details and send them to the umpire. You can reset a password or remove an umpire's access at any time. Removing an umpire keeps the matches they scored.
+
+Umpire accounts are marked on the server, so they cannot be used to create tournaments or casual matches. The rules are enforced in the database (`supabase/schema.sql`, row level security), not just hidden in the screens.
 
 ## 2. Run it locally (optional)
 

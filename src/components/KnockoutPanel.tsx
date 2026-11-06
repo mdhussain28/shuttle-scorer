@@ -50,6 +50,7 @@ export function KnockoutPanel({
   knockout,
   ties,
   info,
+  readOnly = false,
   onSaved,
   onReload,
 }: {
@@ -59,6 +60,7 @@ export function KnockoutPanel({
   knockout: KnockoutConfig | null;
   ties: PlayedTie[];
   info: Record<string, TieInfo>;
+  readOnly?: boolean;
   onSaved: (config: KnockoutConfig | null) => void;
   onReload: () => void;
 }) {
@@ -217,10 +219,12 @@ export function KnockoutPanel({
             </div>
           </div>
         ))}
-        <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" disabled={busy} onClick={() => void reset()}>
-          <Icon name="trash" size={14} />
-          Reset knockout stage
-        </button>
+        {!readOnly && (
+          <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" disabled={busy} onClick={() => void reset()}>
+            <Icon name="trash" size={14} />
+            Reset knockout stage
+          </button>
+        )}
       </div>
     );
   }
@@ -252,6 +256,15 @@ export function KnockoutPanel({
         <div className="h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
           <div className="h-full rounded-full bg-emerald-600" style={{ width: `${pct}%` }} />
         </div>
+      </div>
+    );
+  }
+
+  if (readOnly) {
+    return (
+      <div className="flex items-start gap-3 rounded-lg border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-700">
+        <Icon name="lock" className="mt-0.5" />
+        <p>The organiser sets up the knockout stage. It appears here once they create it.</p>
       </div>
     );
   }

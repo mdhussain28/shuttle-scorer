@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Shell } from "@/components/Shell";
 import { Icon } from "@/components/Icon";
 import { getSupabase } from "@/lib/supabase";
+import { useRole } from "@/lib/useRole";
 import type { MatchRow, Tournament } from "@/lib/types";
 import { daysLeft, fmtDate, scoreLine } from "@/lib/format";
 
@@ -17,6 +18,7 @@ function HomeContent() {
   const [tournaments, setTournaments] = useState<Tournament[] | null>(null);
   const [casual, setCasual] = useState<CasualItem[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const role = useRole();
 
   useEffect(() => {
     const sb = getSupabase();
@@ -37,7 +39,7 @@ function HomeContent() {
     })();
   }, []);
 
-  const actions = [
+  const allActions = [
     {
       href: "/tournaments/new",
       icon: "trophy" as const,
@@ -52,8 +54,12 @@ function HomeContent() {
     },
   ];
 
+  // Umpires only score matches in tournaments the organiser added them to.
+  const actions = role.isUmpire ? [] : allActions;
+
   return (
     <div className="space-y-8">
+      {actions.length > 0 && (
       <div className="grid gap-3 sm:grid-cols-2">
         {actions.map((a) => (
           <Link
@@ -72,6 +78,7 @@ function HomeContent() {
           </Link>
         ))}
       </div>
+      )}
 
       {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 
@@ -81,7 +88,9 @@ function HomeContent() {
           <p className="text-sm text-neutral-500">Loading…</p>
         ) : tournaments.length === 0 ? (
           <div className="card text-center text-sm text-neutral-500">
-            No tournaments yet. Create your first one above.
+            {role.isUmpire
+              ? "You have not been added to a tournament yet. Ask the organiser to add you."
+              : "No tournaments yet. Create your first one above."}
           </div>
         ) : (
           <ul className="space-y-2">
@@ -108,7 +117,7 @@ function HomeContent() {
         )}
       </section>
 
-      <section>
+      {!role.isUmpire && <section>
         <h2 className="section-title mb-3">Recent casual matches</h2>
         {casual === null ? (
           <p className="text-sm text-neutral-500">Loading…</p>
@@ -141,7 +150,7 @@ function HomeContent() {
             ))}
           </ul>
         )}
-      </section>
+      </section>}
     </div>
   );
 }

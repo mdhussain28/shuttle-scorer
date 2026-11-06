@@ -1,12 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Shell } from "@/components/Shell";
 import { getSupabase } from "@/lib/supabase";
+import { useRole } from "@/lib/useRole";
 
 function NewTournamentForm() {
   const router = useRouter();
+  const role = useRole();
+  useEffect(() => {
+    if (role.isUmpire) router.replace("/");
+  }, [role.isUmpire, router]);
   const [name, setName] = useState("");
   const [venue, setVenue] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));

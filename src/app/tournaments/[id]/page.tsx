@@ -6,6 +6,8 @@ import { Shell } from "@/components/Shell";
 import { CategorySection } from "@/components/CategorySection";
 import { Icon } from "@/components/Icon";
 import { Segmented } from "@/components/Segmented";
+import { UmpirePanel } from "@/components/UmpirePanel";
+import { useRole } from "@/lib/useRole";
 import { getSupabase } from "@/lib/supabase";
 import type { Category, Tournament } from "@/lib/types";
 import type { MultiWayRule, TwoWayRule } from "@/lib/scoring/standings";
@@ -25,6 +27,7 @@ const MULTI_WAY_HELP: Record<MultiWayRule, string> = {
 
 function TournamentContent({ id }: { id: string }) {
   const router = useRouter();
+  const role = useRole();
   const [t, setT] = useState<Tournament | null>(null);
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,12 +95,13 @@ function TournamentContent({ id }: { id: string }) {
     router.replace("/");
   }
 
-  if (loading) return <p className="text-sm text-neutral-500">Loading…</p>;
+  if (loading || role.loading) return <p className="text-sm text-neutral-500">Loading…</p>;
   if (!t) return <p className="text-sm text-neutral-500">Tournament not found. It may have been deleted.</p>;
 
   const twoWay: TwoWayRule = t.tie_two ?? "head_to_head";
   const multiWay: MultiWayRule = t.tie_multi ?? "set_point_diff";
   const rules = { pointsPerWin: t.points_per_win, twoWay, multiWay };
+  const readOnly = role.isUmpire;
 
   return (
     <div className="space-y-6">
@@ -111,7 +115,7 @@ function TournamentContent({ id }: { id: string }) {
         ) : (
           <div className="flex items-start gap-2">
             <h2 className="flex-1 text-xl font-semibold tracking-tight">{t.name}</h2>
-            <button
+            {!readOnly && <button
               className="btn btn-ghost btn-sm"
               onClick={() => {
                 setNameDraft(t.name);
@@ -120,7 +124,7 @@ function TournamentContent({ id }: { id: string }) {
             >
               <Icon name="pencil" size={14} />
               Rename
-            </button>
+            </button>}
           </div>
         )}
         <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500">
@@ -132,6 +136,19 @@ function TournamentContent({ id }: { id: string }) {
         </div>
       </div>
 
+      {readOnly ? (
+        <section className="card space-y-1 text-sm">
+          <div className="flex items-center gap-2">
+            <Icon name="sliders" className="text-neutral-500" />
+            <h3 className="font-semibold">Ranking rules</h3>
+          </div>
+          <p className="text-neutral-500">
+            {t.points_per_win} table points per win · two level teams: {twoWay === "decider" ? "decider match" : "head-to-head"} · three or more:{" "}
+            {multiWay === "decider" ? "decider matches" : "set and points difference"}
+          </p>
+          <p className="text-xs text-neutral-500">You are signed in as an umpire. Only the organiser can change the setup.</p>
+        </section>
+      ) : (
       <section className="card space-y-5">
         <div className="flex items-center gap-2">
           <Icon name="sliders" className="text-neutral-500" />
@@ -177,12 +194,15 @@ function TournamentContent({ id }: { id: string }) {
           <p className="mt-1.5 text-xs text-neutral-500">{MULTI_WAY_HELP[multiWay]}</p>
         </div>
       </section>
+      )}
+
+      {!readOnly && <UmpirePanel tournamentId={id} />}
 
       {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 
       <div>
         <h2 className="section-title mb-3">Categories</h2>
-        <form onSubmit={addCategory} className="flex gap-2">
+        {!readOnly && <form onSubmit={addCategory} className="flex gap-2">
           <input
             className="input"
             placeholder="New category, e.g. Men's Doubles, U-15 Singles"
@@ -193,7 +213,7 @@ function TournamentContent({ id }: { id: string }) {
             <Icon name="plus" size={16} />
             Add category
           </button>
-        </form>
+        </form>}
       </div>
 
       {cats.length === 0 ? (
@@ -201,17 +221,19 @@ function TournamentContent({ id }: { id: string }) {
       ) : (
         <div className="space-y-4">
           {cats.map((c) => (
-            <CategorySection key={c.id} category={c} rules={rules} onDeleted={() => void load()} />
+            <CategorySection key={c.id} category={c} rules={rules} readOnly={readOnly} onDeleted={() => void load()} />
           ))}
         </div>
       )}
 
-      <div className="pt-4 text-center">
-        <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void deleteTournament()}>
-          <Icon name="trash" size={14} />
-          Delete this tournament
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="pt-4 text-center">
+          <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void deleteTournament()}>
+            <Icon name="trash" size={14} />
+            Delete this tournament
+          </button>
+        </div>
+      )}
     </div>
   );
 }

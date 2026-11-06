@@ -41,10 +41,13 @@ const SCHEMA_HINT = " Run the latest supabase/schema.sql in the Supabase SQL Edi
 export function CategorySection({
   category,
   rules,
+  readOnly = false,
   onDeleted,
 }: {
   category: Category;
   rules: Rules;
+  /** Umpires can start and score matches but cannot change the setup. */
+  readOnly?: boolean;
   onDeleted: () => void;
 }) {
   const [open, setOpen] = useState(true);
@@ -237,6 +240,9 @@ export function CategorySection({
           </span>
         )}
       </span>
+      {readOnly ? (
+        <span className="text-xs text-neutral-500">{pools.find((p) => p.id === e.pool_id)?.name ?? "No pool"}</span>
+      ) : (
       <select
         aria-label={`Pool for ${entryLabel(e)}`}
         className="input !w-auto !py-1 text-xs"
@@ -250,9 +256,12 @@ export function CategorySection({
           </option>
         ))}
       </select>
-      <button className="btn btn-ghost btn-sm !px-2" onClick={() => void removeEntry(e)} aria-label={`Remove ${entryLabel(e)}`}>
-        <Icon name="x" size={14} />
-      </button>
+      )}
+      {!readOnly && (
+        <button className="btn btn-ghost btn-sm !px-2" onClick={() => void removeEntry(e)} aria-label={`Remove ${entryLabel(e)}`}>
+          <Icon name="x" size={14} />
+        </button>
+      )}
     </li>
   );
 
@@ -272,10 +281,12 @@ export function CategorySection({
             {entries.length} {entries.length === 1 ? "entry" : "entries"}
           </span>
         </button>
-        <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void removeCategory()}>
-          <Icon name="trash" size={14} />
-          Delete
-        </button>
+        {!readOnly && (
+          <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void removeCategory()}>
+            <Icon name="trash" size={14} />
+            Delete
+          </button>
+        )}
       </div>
 
       {open && (
@@ -285,7 +296,7 @@ export function CategorySection({
           )}
 
           {/* Teams and players */}
-          <div>
+          {!readOnly && <div>
             <h3 className="section-title mb-3">Add a team or player</h3>
             <form onSubmit={addEntry} className="space-y-3 rounded-lg bg-neutral-50 p-4 dark:bg-neutral-950/40">
               <Segmented
@@ -324,7 +335,7 @@ export function CategorySection({
                 Add {entryType === "doubles" ? "team" : "player"}
               </button>
             </form>
-          </div>
+          </div>}
 
           {/* Pools */}
           <div className="space-y-3">
@@ -334,13 +345,13 @@ export function CategorySection({
                 New match (any two)
               </Link>
             </div>
-            <form onSubmit={addPool} className="flex gap-2">
+            {!readOnly && <form onSubmit={addPool} className="flex gap-2">
               <input className="input" placeholder="Pool name, e.g. Group A" value={poolName} onChange={(e) => setPoolName(e.target.value)} />
               <button className="btn btn-secondary shrink-0" disabled={busy}>
                 <Icon name="layers" size={16} />
                 Add pool
               </button>
-            </form>
+            </form>}
 
             {pools.length === 0 && (
               <p className="text-sm text-neutral-500">No pools yet. Add “Group A”, “Group B” and so on, then assign teams to them.</p>
@@ -364,9 +375,11 @@ export function CategorySection({
                       <Icon name="plus" size={14} />
                       New match
                     </Link>
-                    <button className="btn btn-ghost btn-sm !px-2" onClick={() => void removePool(pool)} aria-label={`Delete ${pool.name}`}>
-                      <Icon name="x" size={14} />
-                    </button>
+                    {!readOnly && (
+                      <button className="btn btn-ghost btn-sm !px-2" onClick={() => void removePool(pool)} aria-label={`Delete ${pool.name}`}>
+                        <Icon name="x" size={14} />
+                      </button>
+                    )}
                   </div>
                   <StandingsTable rows={rows} labels={labels} />
 
@@ -426,6 +439,7 @@ export function CategorySection({
               knockout={knockout}
               ties={ties}
               info={tieInfo}
+              readOnly={readOnly}
               onSaved={setKnockout}
               onReload={() => void load()}
             />

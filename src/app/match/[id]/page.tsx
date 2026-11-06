@@ -7,6 +7,7 @@ import { Shell } from "@/components/Shell";
 import { CourtView } from "@/components/CourtView";
 import { Icon } from "@/components/Icon";
 import { getSupabase } from "@/lib/supabase";
+import { useRole } from "@/lib/useRole";
 import type { MatchRow } from "@/lib/types";
 import { STAGE_LABEL } from "@/lib/knockout";
 import { intervalAt, replay, summarize, type MatchEvent, type PlayerIndex, type Side } from "@/lib/scoring/engine";
@@ -15,6 +16,7 @@ type SaveState = "saved" | "saving" | "error";
 
 function MatchContent({ id }: { id: string }) {
   const router = useRouter();
+  const role = useRole();
   const [match, setMatch] = useState<MatchRow | null>(null);
   const [events, setEvents] = useState<MatchEvent[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -363,10 +365,12 @@ function MatchContent({ id }: { id: string }) {
           <Icon name="undo" size={16} />
           Undo last point
         </button>
-        <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void deleteMatch()}>
-          <Icon name="trash" size={14} />
-          Delete match
-        </button>
+        {!role.isUmpire && (
+          <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void deleteMatch()}>
+            <Icon name="trash" size={14} />
+            Delete match
+          </button>
+        )}
       </div>
     </div>
   );

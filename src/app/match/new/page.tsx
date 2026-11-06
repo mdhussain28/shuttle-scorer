@@ -7,6 +7,7 @@ import { Shell } from "@/components/Shell";
 import { Icon } from "@/components/Icon";
 import { Segmented } from "@/components/Segmented";
 import { getSupabase } from "@/lib/supabase";
+import { useRole } from "@/lib/useRole";
 import type { Category, Entry, EntryType, Tournament } from "@/lib/types";
 import { entryLabel, entryPlayers } from "@/lib/types";
 import { STAGE_LABEL, type Stage } from "@/lib/knockout";
@@ -23,6 +24,7 @@ const STAGES: Stage[] = ["qf", "sf", "final", "third"];
 
 function SetupContent() {
   const router = useRouter();
+  const role = useRole();
   const sp = useSearchParams();
   const categoryId = sp.get("category");
   const poolId = sp.get("pool");
@@ -202,7 +204,14 @@ function SetupContent() {
     );
   };
 
-  if (loading) return <p className="text-sm text-neutral-500">Loading…</p>;
+  if (loading || role.loading) return <p className="text-sm text-neutral-500">Loading…</p>;
+  if (role.isUmpire && !categoryId) {
+    return (
+      <p className="text-sm text-neutral-500">
+        Umpire accounts score matches inside a tournament. Open your tournament and use New match in a pool.
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-5">
