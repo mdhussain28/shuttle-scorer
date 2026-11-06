@@ -63,16 +63,19 @@ export function KnockoutPanel({
   onReload: () => void;
 }) {
   const [stage, setStage] = useState<"qf" | "sf">("sf");
-  const [perPool, setPerPool] = useState(2);
+  // null = default selection (top 2 of every pool) until the organiser changes it.
+  const [picked, setPicked] = useState<Set<string> | null>(null);
   const [third, setThird] = useState(true);
   const [orders, setOrders] = useState<Record<string, string[]>>({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const eligible = pools.filter((p) => p.rows.length >= 2);
-  const played = eligible.reduce((n, p) => n + p.played, 0);
-  const total = eligible.reduce((n, p) => n + p.total, 0);
-  const allComplete = eligible.length > 0 && eligible.every((p) => p.complete);
+  // Pools that have matches to play decide when the stage unlocks; every pool with a team can send teams.
+  const playable = pools.filter((p) => p.rows.length >= 2);
+  const eligible = pools.filter((p) => p.rows.length >= 1);
+  const played = playable.reduce((n, p) => n + p.played, 0);
+  const total = playable.reduce((n, p) => n + p.total, 0);
+  const allComplete = playable.length > 0 && playable.every((p) => p.complete);
 
   const banner = err && (
     <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>
@@ -270,14 +273,28 @@ export function KnockoutPanel({
     setOrders({ ...orders, [p.id]: cur });
   }
 
-  const maxPerPool = Math.max(1, ...eligible.map((p) => p.rows.length));
-  const qualifiers = eligible.reduce((n, p) => n + Math.min(perPool, p.rows.length), 0);
+  const isPicked = (p: PoolInfo, id: string): boolean => {
+    if (picked) return picked.has(id);
+    return orderFor(p).indexOf(id) < 2; // default: top 2 of each pool
+  };
+  const current = (): Set<string> => new Set(picked ?? eligible.flatMap((p) => orderFor(p).slice(0, 2)));
+  const toggle = (id: string) => {
+    const next = current();
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setPicked(next);
+  };
+  const quickFill = (n: number) => setPicked(new Set(eligible.flatMap((p) => orderFor(p).slice(0, n))));
+
+  // Selected teams per pool, kept in pool-rank order so higher ranked teams get better seeds.
+  const selectedByPool = eligible.map((p) => orderFor(p).filter((id) => isPicked(p, id)));
+  const qualifiers = selectedByPool.reduce((n, l) => n + l.length, 0);
   const problem = validateQualifiers(qualifiers, stage);
 
   let slots: Array<string | null> | null = null;
   if (!problem) {
     try {
-      slots = buildSlots(eligible.map(orderFor), perPool, stageSize(stage));
+      slots = buildSlots(selectedByPool, Math.max(1, ...selectedByPool.map((l) => l.length)), stageSize(stage));
     } catch {
       slots = null;
     }
@@ -287,9 +304,7 @@ export function KnockoutPanel({
   eligible.forEach((p) => orderFor(p).forEach((id, i) => (origin[id] = `${shortPool(p.name)}${i + 1}`)));
 
   const levelInQualifying = eligible.some((p) =>
-    orderFor(p)
-      .slice(0, perPool)
-      .some((id) => p.rows.find((r) => r.id === id)?.tied),
+    orderFor(p).some((id) => isPicked(p, id) && p.rows.find((r) => r.id === id)?.tied),
   );
   const pendingDeciders = eligible.reduce((n, p) => n + p.pendingDeciders, 0);
 
@@ -334,21 +349,22 @@ export function KnockoutPanel({
           </div>
         </div>
         <div>
-          <label className="label" htmlFor={`perpool-${categoryId}`}>Teams advancing from each pool</label>
-          <select
-            id={`perpool-${categoryId}`}
-            className="input"
-            value={perPool}
-            onChange={(e) => setPerPool(Number(e.target.value))}
-          >
-            {Array.from({ length: maxPerPool }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                Top {n}
-              </option>
-            ))}
-          </select>
+          <label className="label">Quick select</label>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-secondary flex-1" onClick={() => quickFill(1)}>
+              Top 1 per pool
+            </button>
+            <button type="button" className="btn btn-secondary flex-1" onClick={() => quickFill(2)}>
+              Top 2 per pool
+            </button>
+          </div>
         </div>
       </div>
+
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        Tick the teams that go through, using the points table above. You can take a different number from each pool.{" "}
+        <span className="font-medium text-neutral-900 dark:text-neutral-100">{qualifiers} selected.</span>
+      </p>
 
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={third} onChange={(e) => setThird(e.target.checked)} />
@@ -362,12 +378,12 @@ export function KnockoutPanel({
             <div key={p.id} className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
               <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800/50">
                 <span>{p.name}</span>
-                <span>{Math.min(perPool, order.length)} advance</span>
+                <span>{order.filter((id) => isPicked(p, id)).length} advance</span>
               </div>
               <ul>
                 {order.map((id, i) => {
                   const row = p.rows.find((r) => r.id === id);
-                  const advances = i < perPool;
+                  const advances = isPicked(p, id);
                   const canUp = Boolean(row?.tied) && i > 0 && p.rows.find((r) => r.id === order[i - 1])?.rank === row?.rank;
                   const canDown =
                     Boolean(row?.tied) && i < order.length - 1 && p.rows.find((r) => r.id === order[i + 1])?.rank === row?.rank;
@@ -378,10 +394,15 @@ export function KnockoutPanel({
                         advances ? "" : "text-neutral-400"
                       }`}
                     >
+                      <input
+                        type="checkbox"
+                        aria-label={`${labels[id] ?? "Team"} advances`}
+                        checked={advances}
+                        onChange={() => toggle(id)}
+                      />
                       <span className="w-4 text-xs tabular-nums text-neutral-500">{i + 1}</span>
                       <span className="min-w-0 flex-1 truncate font-medium">{labels[id] ?? "?"}</span>
                       {row?.tied && <span className="badge badge-amber">Level</span>}
-                      {advances && <span className="badge badge-green">Advances</span>}
                       {row?.tied && (
                         <span className="flex">
                           <button
