@@ -4,9 +4,24 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Shell } from "@/components/Shell";
 import { CategorySection } from "@/components/CategorySection";
+import { Icon } from "@/components/Icon";
+import { Segmented } from "@/components/Segmented";
 import { getSupabase } from "@/lib/supabase";
 import type { Category, Tournament } from "@/lib/types";
+import type { MultiWayRule, TwoWayRule } from "@/lib/scoring/standings";
 import { daysLeft, fmtDate } from "@/lib/format";
+
+const TWO_WAY_HELP: Record<TwoWayRule, string> = {
+  head_to_head: "The team that won the match between the two ranks higher (BWF).",
+  decider:
+    "Neither team is ranked above the other until they play an extra decider match. The decider does not count in the pool table.",
+};
+const MULTI_WAY_HELP: Record<MultiWayRule, string> = {
+  set_point_diff:
+    "Set difference first, then points difference (BWF). If that leaves exactly two teams level, the rule above applies again.",
+  decider:
+    "The level teams play a mini league of decider matches. The team with the most decider wins ranks highest.",
+};
 
 function TournamentContent({ id }: { id: string }) {
   const router = useRouter();
@@ -34,6 +49,21 @@ function TournamentContent({ id }: { id: string }) {
     void load();
   }, [load]);
 
+  async function patch(values: Record<string, unknown>) {
+    const { error } = await getSupabase().from("tournaments").update(values).eq("id", id);
+    if (error) {
+      setErr(
+        error.message.includes("column")
+          ? `${error.message}. Run the latest supabase/schema.sql in the Supabase SQL Editor.`
+          : error.message,
+      );
+      return false;
+    }
+    setErr(null);
+    await load();
+    return true;
+  }
+
   async function addCategory(ev: FormEvent) {
     ev.preventDefault();
     const name = newCat.trim();
@@ -51,17 +81,7 @@ function TournamentContent({ id }: { id: string }) {
       setErr("The tournament name must be between 3 and 80 characters.");
       return;
     }
-    const { error } = await getSupabase().from("tournaments").update({ name }).eq("id", id);
-    if (error) return setErr(error.message);
-    setErr(null);
-    setEditing(false);
-    await load();
-  }
-
-  async function setPointsPerWin(value: number) {
-    const { error } = await getSupabase().from("tournaments").update({ points_per_win: value }).eq("id", id);
-    if (error) return setErr(error.message);
-    await load();
+    if (await patch({ name })) setEditing(false);
   }
 
   async function deleteTournament() {
@@ -75,6 +95,10 @@ function TournamentContent({ id }: { id: string }) {
   if (loading) return <p className="text-sm text-neutral-500">Loading…</p>;
   if (!t) return <p className="text-sm text-neutral-500">Tournament not found. It may have been deleted.</p>;
 
+  const twoWay: TwoWayRule = t.tie_two ?? "head_to_head";
+  const multiWay: MultiWayRule = t.tie_multi ?? "set_point_diff";
+  const rules = { pointsPerWin: t.points_per_win, twoWay, multiWay };
+
   return (
     <div className="space-y-6">
       <div className="card space-y-3">
@@ -86,64 +110,105 @@ function TournamentContent({ id }: { id: string }) {
           </div>
         ) : (
           <div className="flex items-start gap-2">
-            <h2 className="flex-1 text-xl font-bold">{t.name}</h2>
+            <h2 className="flex-1 text-xl font-semibold tracking-tight">{t.name}</h2>
             <button
-              className="btn btn-ghost !px-3 !py-1.5 text-xs"
+              className="btn btn-ghost btn-sm"
               onClick={() => {
                 setNameDraft(t.name);
                 setEditing(true);
               }}
             >
+              <Icon name="pencil" size={14} />
               Rename
             </button>
           </div>
         )}
-        <p className="text-sm text-neutral-500">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500">
           {[t.venue, fmtDate(t.start_date)].filter(Boolean).join(" · ")}
-        </p>
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="chip bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+          <span className="badge badge-amber">
+            <Icon name="clock" size={12} />
             Deleted automatically in {daysLeft(t.expires_at)} days
           </span>
-          <label className="flex items-center gap-2 text-neutral-500">
-            Points per match win
-            <select
-              className="input !w-auto !py-1"
-              value={t.points_per_win}
-              onChange={(e) => void setPointsPerWin(Number(e.target.value))}
-            >
-              {[1, 2, 3].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </label>
         </div>
       </div>
 
-      {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+      <section className="card space-y-5">
+        <div className="flex items-center gap-2">
+          <Icon name="sliders" className="text-neutral-500" />
+          <h3 className="font-semibold">Ranking rules</h3>
+        </div>
 
-      <form onSubmit={addCategory} className="flex gap-2">
-        <input
-          className="input"
-          placeholder="New category, e.g. Men's Doubles, U-15 Singles"
-          value={newCat}
-          onChange={(e) => setNewCat(e.target.value)}
-        />
-        <button className="btn btn-primary shrink-0">Add category</button>
-      </form>
+        <div>
+          <label className="label">Table points per match win</label>
+          <Segmented
+            ariaLabel="Points per win"
+            value={t.points_per_win}
+            onChange={(v) => void patch({ points_per_win: v })}
+            options={[1, 2, 3].map((n) => ({ value: n, label: String(n) }))}
+          />
+          <p className="mt-1.5 text-xs text-neutral-500">Only changes the “Pts” column. The order is by matches won.</p>
+        </div>
+
+        <div>
+          <label className="label">When two teams are level on wins</label>
+          <Segmented
+            ariaLabel="Two team tie"
+            value={twoWay}
+            onChange={(v) => void patch({ tie_two: v })}
+            options={[
+              { value: "head_to_head" as TwoWayRule, label: "Head-to-head" },
+              { value: "decider" as TwoWayRule, label: "Decider match" },
+            ]}
+          />
+          <p className="mt-1.5 text-xs text-neutral-500">{TWO_WAY_HELP[twoWay]}</p>
+        </div>
+
+        <div>
+          <label className="label">When three or more teams are level</label>
+          <Segmented
+            ariaLabel="Multi team tie"
+            value={multiWay}
+            onChange={(v) => void patch({ tie_multi: v })}
+            options={[
+              { value: "set_point_diff" as MultiWayRule, label: "Set & points difference" },
+              { value: "decider" as MultiWayRule, label: "Decider matches" },
+            ]}
+          />
+          <p className="mt-1.5 text-xs text-neutral-500">{MULTI_WAY_HELP[multiWay]}</p>
+        </div>
+      </section>
+
+      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+
+      <div>
+        <h2 className="section-title mb-3">Categories</h2>
+        <form onSubmit={addCategory} className="flex gap-2">
+          <input
+            className="input"
+            placeholder="New category, e.g. Men's Doubles, U-15 Singles"
+            value={newCat}
+            onChange={(e) => setNewCat(e.target.value)}
+          />
+          <button className="btn btn-primary shrink-0">
+            <Icon name="plus" size={16} />
+            Add category
+          </button>
+        </form>
+      </div>
 
       {cats.length === 0 ? (
         <p className="text-sm text-neutral-500">No categories yet. Add your first one above.</p>
       ) : (
         <div className="space-y-4">
           {cats.map((c) => (
-            <CategorySection key={c.id} category={c} pointsPerWin={t.points_per_win} onDeleted={() => void load()} />
+            <CategorySection key={c.id} category={c} rules={rules} onDeleted={() => void load()} />
           ))}
         </div>
       )}
 
       <div className="pt-4 text-center">
-        <button className="btn btn-ghost text-xs text-red-600" onClick={() => void deleteTournament()}>
+        <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void deleteTournament()}>
+          <Icon name="trash" size={14} />
           Delete this tournament
         </button>
       </div>

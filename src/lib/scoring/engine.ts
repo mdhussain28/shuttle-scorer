@@ -22,6 +22,11 @@ export interface MatchConfig {
   aRight: PlayerIndex;
   /** Doubles: index (0 or 1) of side B's player who starts in the RIGHT court. */
   bRight: PlayerIndex;
+  /**
+   * Golden point (no deuce): the first side to reach `pointsToWin` wins the set, so at
+   * 20-20 the next point decides it. The cap is not used. Off (undefined) = standard BWF scoring.
+   */
+  goldenPoint?: boolean;
 }
 
 export type MatchEvent =
@@ -60,6 +65,8 @@ export interface MatchState {
   setPoint: Record<Side, boolean>;
   /** True if the next point by this side wins the whole match. */
   matchPoint: Record<Side, boolean>;
+  /** True while the score is level at one point below the target and golden point is on. */
+  goldenPointNow: boolean;
   winner: Side | null;
 }
 
@@ -86,7 +93,7 @@ export function validateConfig(c: MatchConfig): string | null {
   if (!Number.isInteger(c.pointsToWin) || c.pointsToWin < 5 || c.pointsToWin > 50) {
     return "Points per set must be a whole number between 5 and 50.";
   }
-  if (c.cap !== null && (!Number.isInteger(c.cap) || c.cap <= c.pointsToWin)) {
+  if (!c.goldenPoint && c.cap !== null && (!Number.isInteger(c.cap) || c.cap <= c.pointsToWin)) {
     return "The cap must be higher than the points per set (or switch the cap off).";
   }
   return null;
@@ -96,6 +103,11 @@ export function validateConfig(c: MatchConfig): string | null {
 export function setWinner(scores: Record<Side, number>, cfg: MatchConfig): Side | null {
   for (const x of ["a", "b"] as Side[]) {
     const y = other(x);
+    if (cfg.goldenPoint) {
+      // No deuce: reaching the target wins the set, whatever the opponent has.
+      if (scores[x] >= cfg.pointsToWin) return x;
+      continue;
+    }
     if (cfg.cap !== null && scores[x] >= cfg.cap) return x;
     if (scores[x] >= cfg.pointsToWin && scores[x] - scores[y] >= 2) return x;
   }
@@ -132,6 +144,9 @@ function refresh(s: MatchState): MatchState {
     s.setPoint[x] = live && wouldWinSet(s.scores, x, s.config);
     s.matchPoint[x] = s.setPoint[x] && s.setsWon[x] + 1 >= need;
   }
+  const level = s.config.pointsToWin - 1;
+  s.goldenPointNow =
+    live && Boolean(s.config.goldenPoint) && s.scores.a === level && s.scores.b === level;
   return s;
 }
 
@@ -152,6 +167,7 @@ export function initialState(config: MatchConfig): MatchState {
     notice: null,
     setPoint: { a: false, b: false },
     matchPoint: { a: false, b: false },
+    goldenPointNow: false,
     winner: null,
   };
   return refresh(s);

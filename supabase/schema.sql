@@ -1,6 +1,7 @@
 -- Shuttle Scorer database schema
--- Run once in Supabase: SQL Editor -> New query -> paste this file -> Run.
+-- Run in Supabase: SQL Editor -> New query -> paste this file -> Run.
 -- Safe to re-run: every statement uses IF NOT EXISTS / DROP IF EXISTS.
+-- Re-run it whenever you update the app, to pick up new columns.
 
 -- ---------------------------------------------------------------------------
 -- Tables
@@ -84,6 +85,28 @@ create table if not exists public.matches (
   -- want them kept longer.
   expires_at    timestamptz not null default (now() + interval '3 months')
 );
+
+-- ---------------------------------------------------------------------------
+-- Version 2 columns (tie-break rules, knockout stage, decider matches).
+-- These ALTERs add the columns to a database created with the first version
+-- and do nothing if they already exist, so re-running this whole file is safe.
+-- ---------------------------------------------------------------------------
+
+alter table public.tournaments
+  add column if not exists tie_two text not null default 'head_to_head'
+    check (tie_two in ('head_to_head', 'decider'));
+alter table public.tournaments
+  add column if not exists tie_multi text not null default 'set_point_diff'
+    check (tie_multi in ('set_point_diff', 'decider'));
+
+-- Knockout bracket for a category: { stage, slots, thirdPlace }, null until generated.
+alter table public.categories add column if not exists knockout jsonb;
+
+-- Knockout matches carry their round and position; decider matches are flagged.
+alter table public.matches
+  add column if not exists stage text check (stage in ('qf', 'sf', 'final', 'third'));
+alter table public.matches add column if not exists slot int;
+alter table public.matches add column if not exists is_decider boolean not null default false;
 
 create index if not exists idx_categories_tournament on public.categories(tournament_id);
 create index if not exists idx_pools_category        on public.pools(category_id);

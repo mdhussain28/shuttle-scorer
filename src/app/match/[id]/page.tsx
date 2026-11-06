@@ -5,8 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Shell } from "@/components/Shell";
 import { CourtView } from "@/components/CourtView";
+import { Icon } from "@/components/Icon";
 import { getSupabase } from "@/lib/supabase";
 import type { MatchRow } from "@/lib/types";
+import { STAGE_LABEL } from "@/lib/knockout";
 import { intervalAt, replay, summarize, type MatchEvent, type PlayerIndex, type Side } from "@/lib/scoring/engine";
 
 type SaveState = "saved" | "saving" | "error";
@@ -19,6 +21,7 @@ function MatchContent({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [nextRight, setNextRight] = useState<{ a: PlayerIndex; b: PlayerIndex }>({ a: 0, b: 0 });
+  const [crumb, setCrumb] = useState<string[]>([]);
 
   const latest = useRef<MatchEvent[]>([]);
   const configRef = useRef<MatchRow["config"] | null>(null);
@@ -26,7 +29,8 @@ function MatchContent({ id }: { id: string }) {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await getSupabase().from("matches").select("*").eq("id", id).maybeSingle();
+      const sb = getSupabase();
+      const { data, error } = await sb.from("matches").select("*").eq("id", id).maybeSingle();
       if (error) setLoadError(error.message);
       else if (!data) setLoadError("Match not found. It may have been deleted.");
       else {
@@ -35,6 +39,26 @@ function MatchContent({ id }: { id: string }) {
         setEvents(row.events ?? []);
         latest.current = row.events ?? [];
         configRef.current = row.config;
+
+        // Breadcrumb: tournament, category and round (best effort).
+        const parts: string[] = [];
+        try {
+          if (row.tournament_id) {
+            const t = await sb.from("tournaments").select("name").eq("id", row.tournament_id).maybeSingle();
+            if (t.data?.name) parts.push(t.data.name as string);
+          }
+          if (row.category_id) {
+            const c = await sb.from("categories").select("name").eq("id", row.category_id).maybeSingle();
+            if (c.data?.name) parts.push(c.data.name as string);
+          }
+        } catch {
+          /* breadcrumb is optional */
+        }
+        if (row.is_decider) parts.push("Decider");
+        else if (row.stage) {
+          parts.push(row.stage === "final" || row.stage === "third" ? STAGE_LABEL[row.stage] : `${STAGE_LABEL[row.stage]} ${row.slot ?? ""}`.trim());
+        }
+        setCrumb(parts);
       }
       setLoading(false);
     })();
@@ -156,7 +180,8 @@ function MatchContent({ id }: { id: string }) {
   }
 
   if (loading) return <p className="text-sm text-neutral-500">Loading…</p>;
-  if (loadError) return <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{loadError}</p>;
+  if (loadError)
+    return <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{loadError}</p>;
   if (!match) return null;
   if (!state) return <p className="text-sm text-neutral-500">This match’s data could not be read.</p>;
 
@@ -171,26 +196,38 @@ function MatchContent({ id }: { id: string }) {
 
   const serverName = names[state.server.side][state.server.playerIndex];
   const receiverName = names[state.receiver.side][state.receiver.playerIndex];
+  const backHref = match.tournament_id ? `/tournaments/${match.tournament_id}` : "/";
+  const backLabel = match.stage ? "Back to bracket" : match.tournament_id ? "Back to tournament" : "Back to home";
 
   const renderSide = (side: Side) => {
     const serving = inSet && state.server.side === side;
     return (
-      <div key={side} className={`card flex flex-col items-center gap-2 text-center ${serving ? "ring-2 ring-emerald-500" : ""}`}>
-        <div className="flex max-w-full items-center gap-1 text-sm font-semibold">
-          {serving && <span title="Serving">🏸</span>}
+      <div
+        key={side}
+        className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-center ${
+          serving ? "border-emerald-500 bg-slate-800" : "border-slate-700 bg-slate-800/60"
+        }`}
+      >
+        <div className="flex max-w-full items-center gap-1.5 text-sm font-semibold text-slate-100">
+          {serving && <Icon name="shuttle" size={14} className="shrink-0 text-emerald-400" />}
           <span className="truncate">{labels[side]}</span>
         </div>
-        {doubles && <div className="max-w-full truncate text-xs text-neutral-500">{names[side].join(" & ")}</div>}
-        <div className="text-7xl font-black leading-none tabular-nums sm:text-8xl">{state.scores[side]}</div>
+        {doubles && <div className="max-w-full truncate text-xs text-slate-400">{names[side].join(" & ")}</div>}
+        <div className="text-7xl font-bold leading-none tabular-nums text-white sm:text-8xl">{state.scores[side]}</div>
         <div className="flex min-h-[1.5rem] items-center">
           {inSet && state.matchPoint[side] ? (
-            <span className="chip bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">Match point</span>
+            <span className="rounded-md bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">Match point</span>
           ) : inSet && state.setPoint[side] ? (
-            <span className="chip bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Set point</span>
+            <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-300">Set point</span>
           ) : null}
         </div>
-        <button className="btn btn-primary w-full !py-4 text-lg" disabled={!inSet} onClick={() => push({ t: "r", w: side })}>
-          +1
+        <button
+          className="btn btn-primary w-full !py-4 text-lg"
+          disabled={!inSet}
+          onClick={() => push({ t: "r", w: side })}
+          aria-label={`Point to ${labels[side]}`}
+        >
+          <Icon name="plus" size={20} />1
         </button>
       </div>
     );
@@ -198,11 +235,15 @@ function MatchContent({ id }: { id: string }) {
 
   const saveBadge =
     saveState === "saved" ? (
-      <span className="text-emerald-600">Saved ✓</span>
+      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+        <Icon name="check" size={14} />
+        Saved
+      </span>
     ) : saveState === "saving" ? (
       <span className="text-neutral-500">Saving…</span>
     ) : (
-      <button className="font-semibold text-red-600" onClick={() => void flush()}>
+      <button className="inline-flex items-center gap-1 font-semibold text-red-600" onClick={() => void flush()}>
+        <Icon name="alert" size={14} />
         Not saved. Tap to retry
       </button>
     );
@@ -210,50 +251,59 @@ function MatchContent({ id }: { id: string }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-xs">
-        {match.tournament_id ? (
-          <Link href={`/tournaments/${match.tournament_id}`} className="font-medium text-emerald-600 hover:underline">
-            ← Tournament
-          </Link>
-        ) : (
-          <Link href="/" className="font-medium text-emerald-600 hover:underline">
-            ← Home
-          </Link>
-        )}
-        <span className="flex-1" />
+        <Link href={backHref} className="inline-flex items-center gap-1 font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+          <Icon name="arrow-left" size={14} />
+          {match.tournament_id ? "Tournament" : "Home"}
+        </Link>
+        {crumb.length > 0 && <span className="min-w-0 flex-1 truncate text-neutral-500">{crumb.join(" · ")}</span>}
+        {crumb.length === 0 && <span className="flex-1" />}
         {saveBadge}
       </div>
 
-      <div className="text-center text-sm text-neutral-500">
-        Best of {cfg.bestOf} · {cfg.pointsToWin} points{cfg.cap ? `, cap ${cfg.cap}` : ", no cap"}
-        {state.phase !== "finished" && <> · <span className="font-semibold text-neutral-800 dark:text-neutral-100">Set {state.setIndex + 1}</span></>}
-      </div>
-
-      <div className="flex items-center justify-center gap-3 text-sm">
-        <span className="font-semibold">Sets</span>
-        <span className="text-2xl font-black tabular-nums">
-          {state.setsWon.a} – {state.setsWon.b}
-        </span>
-        {state.completedSets.map((s, i) => (
-          <span key={i} className="chip bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
-            {s[0]}-{s[1]}
-          </span>
-        ))}
-      </div>
-
-      {state.notice && (
-        <div className="rounded-xl bg-amber-100 px-4 py-3 text-sm font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
-          ⏱ A player reached {intervalAt(cfg.pointsToWin)} points: 60-second interval
-          {state.notice === "interval_change_ends" ? " and change ends." : "."}
+      {/* Scoreboard */}
+      <div className="space-y-4 rounded-2xl bg-slate-900 p-4 text-slate-100">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-400">
+          <span>Best of {cfg.bestOf}</span>
+          <span>{cfg.pointsToWin} points</span>
+          <span>{cfg.goldenPoint ? "Golden point" : cfg.cap ? `Cap ${cfg.cap}` : "No cap"}</span>
+          {state.phase !== "finished" && <span className="font-semibold text-slate-100">Set {state.setIndex + 1}</span>}
         </div>
-      )}
 
-      <div className="grid grid-cols-2 gap-3">{order.map(renderSide)}</div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Sets</span>
+          <span className="text-2xl font-bold tabular-nums text-white">
+            {state.setsWon.a} – {state.setsWon.b}
+          </span>
+          {state.completedSets.map((s, i) => (
+            <span key={i} className="rounded-md bg-slate-800 px-2 py-0.5 text-xs tabular-nums text-slate-300">
+              {s[0]}-{s[1]}
+            </span>
+          ))}
+        </div>
+
+        {inSet && state.goldenPointNow && (
+          <div className="flex items-center justify-center gap-2 rounded-lg bg-amber-500/15 px-4 py-2.5 text-sm font-semibold text-amber-300">
+            <Icon name="bolt" size={16} />
+            Golden point: next point wins the set
+          </div>
+        )}
+
+        {state.notice && (
+          <div className="flex items-center justify-center gap-2 rounded-lg bg-sky-500/15 px-4 py-2.5 text-sm font-medium text-sky-200">
+            <Icon name="clock" size={16} />
+            {intervalAt(cfg.pointsToWin)} points reached: 60-second interval
+            {state.notice === "interval_change_ends" ? " and change ends." : "."}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">{order.map(renderSide)}</div>
+      </div>
 
       <div className="card space-y-3">
         <CourtView state={state} names={names} />
         {inSet && (
           <p className="text-center text-sm">
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{serverName}</span> serves from the{" "}
+            <span className="font-semibold text-emerald-700 dark:text-emerald-400">{serverName}</span> serves from the{" "}
             <span className="font-semibold">{state.server.court}</span> court to{" "}
             <span className="font-semibold text-amber-600 dark:text-amber-400">{receiverName}</span>
           </p>
@@ -261,18 +311,16 @@ function MatchContent({ id }: { id: string }) {
       </div>
 
       {state.phase === "between_sets" && lastSetWinner && lastSet && (
-        <div className="card space-y-3 border-emerald-500">
+        <div className="card space-y-3 !border-emerald-500">
           <p className="font-semibold">
             Set {state.setIndex + 1} goes to {labels[lastSetWinner]} ({lastSet[0]}–{lastSet[1]})
           </p>
-          <p className="text-sm text-neutral-500">
-            Players change ends. {labels[state.servingSide]} serves first in the next set.
-          </p>
+          <p className="text-sm text-neutral-500">Players change ends. {labels[state.servingSide]} serves first in the next set.</p>
           {doubles && (
             <div className="grid gap-3 sm:grid-cols-2">
               {(["a", "b"] as Side[]).map((s) => (
                 <div key={s}>
-                  <label className="label">{labels[s]}: starts in right court</label>
+                  <label className="label">{labels[s]}: starts in the right court</label>
                   <select
                     className="input"
                     value={nextRight[s]}
@@ -289,32 +337,34 @@ function MatchContent({ id }: { id: string }) {
             </div>
           )}
           <button className="btn btn-primary w-full" onClick={() => push({ t: "n", aRight: nextRight.a, bRight: nextRight.b })}>
+            <Icon name="play" size={14} />
             Start set {state.setIndex + 2}
           </button>
         </div>
       )}
 
       {state.phase === "finished" && state.winner && (
-        <div className="card space-y-2 border-emerald-500 text-center">
-          <p className="text-2xl">🏆</p>
-          <p className="text-lg font-bold">{labels[state.winner]} wins</p>
+        <div className="card space-y-2 !border-emerald-500 text-center">
+          <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-700 text-white">
+            <Icon name="trophy" size={22} />
+          </span>
+          <p className="text-lg font-semibold">{labels[state.winner]} wins</p>
           <p className="text-sm text-neutral-500">
             {state.setsWon.a}–{state.setsWon.b} in sets ({state.completedSets.map((s) => `${s[0]}-${s[1]}`).join(", ")})
           </p>
-          <Link
-            href={match.tournament_id ? `/tournaments/${match.tournament_id}` : "/"}
-            className="btn btn-primary mt-2 w-full"
-          >
-            {match.tournament_id ? "Back to tournament" : "Back to home"}
+          <Link href={backHref} className="btn btn-primary mt-2 w-full">
+            {backLabel}
           </Link>
         </div>
       )}
 
       <div className="flex items-center gap-3">
         <button className="btn btn-secondary flex-1" disabled={events.length === 0} onClick={undo}>
-          ↶ Undo last point
+          <Icon name="undo" size={16} />
+          Undo last point
         </button>
-        <button className="btn btn-ghost text-xs text-red-600" onClick={() => void deleteMatch()}>
+        <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void deleteMatch()}>
+          <Icon name="trash" size={14} />
           Delete match
         </button>
       </div>

@@ -1,10 +1,20 @@
-// Pool (round-robin group) standings, following the BWF group ranking order:
+// Pool (round-robin group) standings with selectable tie-break rules.
+//
+// Order of finish:
 //   1. Matches won.
-//   2. If exactly two are still tied: the result of the match between them.
-//   3. If three or more are tied: game (set) difference, then points difference.
-//      Whenever a tie narrows down to exactly two, head-to-head is applied again.
-//   4. Anything still level is shown as tied (BWF resolves these by drawing lots).
-// Please confirm against the current BWF General Competition Regulations for your event.
+//   2. Teams level on wins are separated by the rules the organiser chose:
+//        exactly two tied  -> "head_to_head": the result of the match between them (BWF)
+//                             "decider":      a separate decider match between the two
+//        three or more     -> "set_point_diff": set difference, then points difference (BWF);
+//                             whenever the tie narrows to two, the two-team rule applies again
+//                             "decider": a mini league of decider matches among the tied teams
+//   3. Anything still level is flagged as tied (BWF settles this by drawing lots).
+//
+// Decider matches never count towards played / won / lost / sets / points in the table.
+// They are only used to separate teams that are level.
+
+export type TwoWayRule = "head_to_head" | "decider";
+export type MultiWayRule = "set_point_diff" | "decider";
 
 export interface StandingMatch {
   aId: string;
@@ -13,6 +23,15 @@ export interface StandingMatch {
   sets: Array<[number, number]>;
   /** Optional override, e.g. walkover or retirement. Otherwise derived from the sets. */
   winner?: "a" | "b";
+  /** True for a decider (tie-break) match. */
+  decider?: boolean;
+}
+
+export interface StandingOptions {
+  /** Table points per match win (default 2). Does not change the order. */
+  pointsPerWin?: number;
+  twoWay?: TwoWayRule;
+  multiWay?: MultiWayRule;
 }
 
 export interface StandingRow {
@@ -29,16 +48,46 @@ export interface StandingRow {
   /** Table points: wins x pointsPerWin. */
   matchPoints: number;
   rank: number;
-  /** True when this row is level with another on every criterion (draw of lots needed). */
+  /** True when this row is level with another on every rule in use. */
   tied: boolean;
 }
 
-export function computeStandings(
+/** A group of level teams that still needs decider matches, and which pairings are missing. */
+export interface PendingDecider {
+  ids: string[];
+  pairs: Array<[string, string]>;
+}
+
+export interface StandingResult {
+  rows: StandingRow[];
+  pending: PendingDecider[];
+}
+
+function partition(sorted: string[], key: (id: string) => number): string[][] {
+  const parts: string[][] = [];
+  for (const id of sorted) {
+    const last = parts[parts.length - 1];
+    if (last && key(last[0]) === key(id)) last.push(id);
+    else parts.push([id]);
+  }
+  return parts;
+}
+
+function pairsOf(group: string[]): Array<[string, string]> {
+  const out: Array<[string, string]> = [];
+  for (let i = 0; i < group.length; i++) for (let j = i + 1; j < group.length; j++) out.push([group[i], group[j]]);
+  return out;
+}
+
+export function computeStandingsDetailed(
   ids: string[],
   matches: StandingMatch[],
-  opts: { pointsPerWin?: number } = {},
-): StandingRow[] {
+  opts: StandingOptions = {},
+): StandingResult {
   const pointsPerWin = opts.pointsPerWin ?? 2;
+  const twoWay: TwoWayRule = opts.twoWay ?? "head_to_head";
+  const multiWay: MultiWayRule = opts.multiWay ?? "set_point_diff";
+
   const rows = new Map<string, StandingRow>();
   for (const id of ids) {
     rows.set(id, {
@@ -47,8 +96,9 @@ export function computeStandings(
     });
   }
 
-  // head-to-head wins: key "x>y" counts matches x won against y
-  const h2h = new Map<string, number>();
+  // "x>y" -> number of matches x won against y
+  const regularWins = new Map<string, number>();
+  const deciderWins = new Map<string, number>();
 
   for (const m of matches) {
     const ra = rows.get(m.aId);
@@ -67,15 +117,21 @@ export function computeStandings(
     }
     const winner = m.winner ?? (setsA > setsB ? "a" : setsB > setsA ? "b" : null);
     if (!winner) continue;
+    const [w, l] = winner === "a" ? [ra, rb] : [rb, ra];
+    const key = `${w.id}>${l.id}`;
+
+    if (m.decider) {
+      deciderWins.set(key, (deciderWins.get(key) ?? 0) + 1);
+      continue;
+    }
 
     ra.played++; rb.played++;
     ra.setsWon += setsA; ra.setsLost += setsB;
     rb.setsWon += setsB; rb.setsLost += setsA;
     ra.pointsFor += ptsA; ra.pointsAgainst += ptsB;
     rb.pointsFor += ptsB; rb.pointsAgainst += ptsA;
-    const [w, l] = winner === "a" ? [ra, rb] : [rb, ra];
     w.won++; l.lost++;
-    h2h.set(`${w.id}>${l.id}`, (h2h.get(`${w.id}>${l.id}`) ?? 0) + 1);
+    regularWins.set(key, (regularWins.get(key) ?? 0) + 1);
   }
 
   for (const r of rows.values()) {
@@ -84,36 +140,66 @@ export function computeStandings(
     r.matchPoints = r.won * pointsPerWin;
   }
 
-  const headToHeadWinner = (x: string, y: string): string | null => {
-    const xw = h2h.get(`${x}>${y}`) ?? 0;
-    const yw = h2h.get(`${y}>${x}`) ?? 0;
+  const winnerOf = (book: Map<string, number>, x: string, y: string): string | null => {
+    const xw = book.get(`${x}>${y}`) ?? 0;
+    const yw = book.get(`${y}>${x}`) ?? 0;
     if (xw > yw) return x;
     if (yw > xw) return y;
     return null;
   };
 
-  type Criterion = (r: StandingRow) => number;
-  const criteria: Criterion[] = [(r) => r.won, (r) => r.setDiff, (r) => r.pointDiff];
+  const pending: PendingDecider[] = [];
+  type Key = (id: string) => number;
+  const bySetDiff: Key = (id) => rows.get(id)!.setDiff;
+  const byPointDiff: Key = (id) => rows.get(id)!.pointDiff;
 
-  function resolve(group: string[], crits: Criterion[]): string[][] {
-    if (group.length === 1) return [group];
-    if (group.length === 2) {
-      const w = headToHeadWinner(group[0], group[1]);
-      if (w) return [[w], [w === group[0] ? group[1] : group[0]]];
-    }
-    if (crits.length === 0) return [group]; // still level: draw of lots
+  function resolveByDiff(group: string[], crits: Key[]): string[][] {
+    if (crits.length === 0) return [group];
     const [c, ...rest] = crits;
-    const sorted = [...group].sort((x, y) => c(rows.get(y)!) - c(rows.get(x)!));
-    const parts: string[][] = [];
-    for (const id of sorted) {
-      const last = parts[parts.length - 1];
-      if (last && c(rows.get(last[0])!) === c(rows.get(id)!)) last.push(id);
-      else parts.push([id]);
-    }
-    return parts.flatMap((p) => resolve(p, rest));
+    const sorted = [...group].sort((x, y) => c(y) - c(x));
+    return partition(sorted, c).flatMap((p) =>
+      p.length === 1 ? [p] : p.length === 2 ? resolvePair(p, rest) : resolveByDiff(p, rest),
+    );
   }
 
-  const ordered = resolve([...ids], criteria);
+  // Two teams level. `remaining` are the BWF criteria still to use if no direct result exists.
+  function resolvePair(pair: string[], remaining: Key[]): string[][] {
+    const [x, y] = pair;
+    const w = winnerOf(twoWay === "decider" ? deciderWins : regularWins, x, y);
+    if (w) return [[w], [w === x ? y : x]];
+    if (twoWay === "decider") {
+      pending.push({ ids: [x, y], pairs: [[x, y]] });
+      return [pair];
+    }
+    return resolveByDiff(pair, remaining); // head-to-head not played: fall back to the BWF order
+  }
+
+  // Three or more level, decider mode: everyone plays a decider against each other.
+  function resolveDeciderLeague(group: string[]): string[][] {
+    const missing = pairsOf(group).filter(([x, y]) => !winnerOf(deciderWins, x, y));
+    if (missing.length > 0) {
+      pending.push({ ids: group, pairs: missing });
+      return [group];
+    }
+    const leagueWins: Key = (id) =>
+      group.reduce((n, o) => (o !== id && winnerOf(deciderWins, id, o) === id ? n + 1 : n), 0);
+    const sorted = [...group].sort((x, y) => leagueWins(y) - leagueWins(x));
+    return partition(sorted, leagueWins).flatMap((p) =>
+      p.length === 1 ? [p] : p.length === 2 ? resolvePair(p, []) : [p],
+    );
+  }
+
+  function resolveByWins(group: string[]): string[][] {
+    if (group.length === 1) return [group];
+    if (group.length === 2) return resolvePair(group, [bySetDiff, byPointDiff]);
+    if (multiWay === "decider") return resolveDeciderLeague(group);
+    return resolveByDiff(group, [bySetDiff, byPointDiff]);
+  }
+
+  const wins: Key = (id) => rows.get(id)!.won;
+  const sortedByWins = [...ids].sort((x, y) => wins(y) - wins(x));
+  const ordered = partition(sortedByWins, wins).flatMap(resolveByWins);
+
   const result: StandingRow[] = [];
   let position = 0;
   for (const g of ordered) {
@@ -125,5 +211,32 @@ export function computeStandings(
     }
     position += g.length;
   }
-  return result;
+  return { rows: result, pending };
+}
+
+export function computeStandings(
+  ids: string[],
+  matches: StandingMatch[],
+  opts: StandingOptions = {},
+): StandingRow[] {
+  return computeStandingsDetailed(ids, matches, opts).rows;
+}
+
+/** How many of the pool's regular (non-decider) matches have been played. */
+export function poolProgress(ids: string[], matches: StandingMatch[]): { played: number; total: number } {
+  const seen = new Set<string>();
+  for (const m of matches) {
+    if (m.decider) continue;
+    seen.add(`${m.aId}|${m.bId}`);
+    seen.add(`${m.bId}|${m.aId}`);
+  }
+  const pairs = pairsOf(ids);
+  return { played: pairs.filter(([x, y]) => seen.has(`${x}|${y}`)).length, total: pairs.length };
+}
+
+/** True when every pair in the pool has played its regular match. */
+export function isPoolComplete(ids: string[], matches: StandingMatch[]): boolean {
+  if (ids.length < 2) return false;
+  const p = poolProgress(ids, matches);
+  return p.played === p.total;
 }

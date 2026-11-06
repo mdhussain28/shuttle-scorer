@@ -11,9 +11,14 @@ Badminton tournament and match scoring. Next.js (App Router) + Supabase, built t
 - The live screen shows the score, **who is serving and who is receiving**, and a court diagram with every player in their court. It marks set point and match point, prompts the 11-point interval and change of ends, and has **undo**.
 - Every pool shows a live **ranking table** that follows the BWF group order.
 - Every match (rally by rally) is saved, per team and per category.
+- **Golden point** (no deuce) can be switched on for any match: at 20-20 in a 21-point set the next point wins.
+- **Tie-break rules are selectable** per tournament: for two level teams use head-to-head or a decider match; for three or more use set and points difference or decider matches.
+- **Knockout stage**: when every pool match is played, choose semi-finals or quarter-finals. The app maps the teams across pools (for example Group A winner vs Group B runner-up), builds the bracket, and moves winners forward through the final and third-place match.
 - Tournament data (and casual matches) are deleted automatically **3 months** after creation.
 
 ## 1. Set up Supabase (5 minutes)
+
+**Upgrading from an earlier version?** Re-run the whole `supabase/schema.sql` in the SQL Editor once. It is safe to run again and only adds the new columns.
 
 1. Create a free project at <https://supabase.com>.
 2. **SQL Editor -> New query**, paste all of `supabase/schema.sql`, click **Run**.
@@ -27,7 +32,7 @@ Badminton tournament and match scoring. Next.js (App Router) + Supabase, built t
 npm install
 cp .env.example .env.local     # then fill in the 4 values
 npm run dev                    # http://localhost:3000
-npm test                       # scoring engine + standings tests
+npm test                       # scoring, standings and knockout tests
 ```
 
 ## 3. Deploy to Vercel
@@ -66,6 +71,13 @@ Pool ranking (`src/lib/scoring/standings.ts`), BWF group order:
 4. Still level: shown as tied ("2=") because BWF settles it by drawing lots.
 
 "Pts" in the table is wins x the tournament's *points per match win* (default 2, changeable on the tournament page). It never changes the order, which is by wins.
+
+Tie-break options (Tournament page, **Ranking rules**):
+
+- *Two teams level*: **Head-to-head** (BWF) or **Decider match**. A decider is offered on the pool card once all pool matches are done. It only settles the order and is not counted in played, won, lost, sets or points.
+- *Three or more level*: **Set and points difference** (BWF) or **Decider matches**, played as a mini league among the level teams.
+
+Knockout (`src/lib/knockout.ts`): pool winners are seeded first, then runners-up, in a standard bracket so the top seeds meet the lowest. Same-pool teams are kept apart in the first round where possible, and a bye goes to the top seed when the number of qualifiers is not a full bracket. Teams that are level on every rule can be ordered by hand (after a draw of lots) before the bracket is created.
 
 > Please check the tie-break order against the current BWF General Competition Regulations for your event level. If your event uses a different order, only the `criteria` list in `standings.ts` needs to change.
 

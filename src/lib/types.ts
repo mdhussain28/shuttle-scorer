@@ -1,4 +1,6 @@
 import type { MatchConfig, MatchEvent } from "@/lib/scoring/engine";
+import type { KnockoutConfig, Stage } from "@/lib/knockout";
+import type { MultiWayRule, TwoWayRule } from "@/lib/scoring/standings";
 
 export type EntryType = "singles" | "doubles";
 
@@ -8,6 +10,9 @@ export interface Tournament {
   venue: string | null;
   start_date: string | null;
   points_per_win: number;
+  /** Optional so the app still loads before the latest schema.sql has been run. */
+  tie_two?: TwoWayRule;
+  tie_multi?: MultiWayRule;
   created_at: string;
   expires_at: string;
 }
@@ -16,6 +21,7 @@ export interface Category {
   id: string;
   tournament_id: string;
   name: string;
+  knockout?: KnockoutConfig | null;
   created_at: string;
 }
 
@@ -58,6 +64,9 @@ export interface MatchRow {
   sets_b: number;
   points_a: number;
   points_b: number;
+  stage?: Stage | null;
+  slot?: number | null;
+  is_decider?: boolean;
   created_at: string;
   finished_at: string | null;
   expires_at: string;
