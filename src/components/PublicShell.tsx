@@ -41,7 +41,7 @@ export function PublicShell({
           ) : (
             <img src="/icon-192.png" alt="" width={32} height={32} className="h-8 w-8 rounded-[10px] shadow-sm" />
           )}
-          <h1 className="min-w-0 flex-1 truncate text-base font-bold tracking-tight sm:text-lg">{title ?? "Shuttle Scorer"}</h1>
+          <h1 className="min-w-0 flex-1 truncate text-base font-semibold sm:text-lg">{title ?? "Shuttle Scorer"}</h1>
           <span className="badge badge-red hidden sm:inline-flex">
             <span className="live-dot" />
             Live
@@ -70,7 +70,7 @@ export function Hero({ title, subtitle, children }: { title: string; subtitle?: 
         style={{ animationDelay: "-4s" }}
       />
       <div className="relative">
-        <h2 className="text-2xl font-bold tracking-tight sm:text-4xl">{title}</h2>
+        <h2 className="text-2xl font-semibold sm:text-4xl">{title}</h2>
         {subtitle && <p className="mt-1.5 max-w-xl text-sm text-blue-100/90">{subtitle}</p>}
         {children && <div className="mt-5">{children}</div>}
       </div>

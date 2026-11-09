@@ -126,7 +126,7 @@ function TournamentContent({ id }: { id: string }) {
           </div>
         ) : (
           <div className="flex items-start gap-2">
-            <h2 className="flex-1 text-xl font-semibold tracking-tight">{t.name}</h2>
+            <h2 className="flex-1 text-xl font-semibold">{t.name}</h2>
             {!readOnly && <button
               className="btn btn-ghost btn-sm"
               onClick={() => {

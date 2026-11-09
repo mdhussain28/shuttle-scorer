@@ -25,7 +25,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "sans-serif"],
+        sans: ["var(--font-roboto)", "Roboto", "Calibri", "Segoe UI", "system-ui", "-apple-system", "Helvetica Neue", "sans-serif"],
       },
       boxShadow: {
         soft: "0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08)",

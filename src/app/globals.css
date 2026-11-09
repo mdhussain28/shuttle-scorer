@@ -8,6 +8,9 @@
     scroll-behavior: smooth;
   }
   body {
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: 0;
     @apply min-h-screen bg-neutral-100 text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
     background-image:
       radial-gradient(900px 420px at 50% -80px, rgb(47 107 224 / 0.12), transparent 70%),
@@ -137,7 +140,7 @@
   height: 1.1em;
   perspective: 7em;
   color: #fff;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   filter: drop-shadow(0 0.06em 0.08em rgb(0 0 0 / 0.35));

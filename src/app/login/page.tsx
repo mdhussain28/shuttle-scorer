@@ -91,7 +91,7 @@ export default function LoginPage() {
     <main className="mx-auto flex min-h-screen max-w-sm animate-rise flex-col justify-center px-6 py-10">
       <div className="mb-8 text-center">
         <img src="/icon-512.png" alt="" width={84} height={84} className="mx-auto mb-5 h-[84px] w-[84px] rounded-[22px] shadow-lift" />
-        <h1 className="text-2xl font-semibold tracking-tight">Shuttle Scorer</h1>
+        <h1 className="text-2xl font-semibold">Shuttle Scorer</h1>
         <p className="mt-1 text-sm text-neutral-500">Sign in to continue</p>
       </div>
 
