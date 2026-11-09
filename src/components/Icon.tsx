@@ -7,7 +7,9 @@ export type IconName =
   | "arrow-left" | "arrow-up" | "arrow-down" | "chevron-down" | "chevron-right"
   | "x" | "plus" | "check" | "undo" | "clock" | "trophy" | "trash" | "pencil"
   | "layers" | "bracket" | "bolt" | "shuttle" | "play" | "info" | "user"
-  | "logout" | "sliders" | "alert" | "lock" | "flag" | "swap";
+  | "logout" | "sliders" | "alert" | "lock" | "flag" | "swap"
+  | "users" | "user-plus" | "shield" | "grid" | "calendar" | "key" | "mail"
+  | "search" | "copy" | "eye" | "activity" | "refresh";
 
 const SHAPES: Record<IconName, ReactNode> = {
   "arrow-left": <path d="M19 12H5M12 19l-7-7 7-7" />,
@@ -62,6 +64,65 @@ const SHAPES: Record<IconName, ReactNode> = {
   lock: <path d="M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3" />,
   flag: <path d="M5 21V4M5 4h11l-2 4 2 4H5" />,
   swap: <path d="M7 4v16M7 4L4 7M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3" />,
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20c0-3.6 3-5.5 6.5-5.5s6.5 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.9.7 3 2.3 3 5.2" />
+    </>
+  ),
+  "user-plus": (
+    <>
+      <circle cx="9" cy="8" r="4" />
+      <path d="M2 21c0-3.7 3-6 7-6s7 2.3 7 6M19 8v6M16 11h6" />
+    </>
+  ),
+  shield: <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3zM9 12l2 2 4-4" />,
+  grid: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </>
+  ),
+  key: (
+    <>
+      <circle cx="8" cy="15" r="4" />
+      <path d="M11 12l9-9M16 7l3 3M14 9l2 2" />
+    </>
+  ),
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-4-4" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  activity: <path d="M3 12h4l3-8 4 16 3-8h4" />,
+  refresh: <path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5" />,
 };
 
 export function Icon({ name, size = 18, className = "" }: { name: IconName; size?: number; className?: string }) {

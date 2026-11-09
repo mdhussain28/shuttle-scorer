@@ -25,3 +25,20 @@ export function nextGroupName(existing: string[]): string {
   }
   return `Group ${existing.length + 1}`;
 }
+
+/** "in 3 days", "in 5 hours", "in 20 min" or "expired". */
+export function timeLeft(iso: string): string {
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return "expired";
+  const min = Math.round(ms / 60_000);
+  if (min < 60) return `in ${Math.max(1, min)} min`;
+  const hours = Math.round(min / 60);
+  if (hours < 48) return `in ${hours} ${hours === 1 ? "hour" : "hours"}`;
+  const days = Math.round(hours / 24);
+  return `in ${days} days`;
+}
+
+export function fmtDateTime(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { purgeExpiredUsers } from "@/lib/server/adminUsers";
 
 // Called once a day by Vercel Cron (see vercel.json).
 // Deletes tournaments (and, through ON DELETE CASCADE, their categories, pools,
@@ -32,6 +33,14 @@ export async function GET(request: Request) {
     .is("tournament_id", null)
     .lt("expires_at", now);
 
+  // Accounts whose deletion time has passed (an admin set it when creating the user).
+  let deletedUsers = 0;
+  try {
+    deletedUsers = await purgeExpiredUsers(admin);
+  } catch {
+    /* the tournament cleanup result is still reported */
+  }
+
   if (tournaments.error || casual.error) {
     return NextResponse.json(
       { error: tournaments.error?.message ?? casual.error?.message },
@@ -42,6 +51,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     deletedTournaments: tournaments.count ?? 0,
     deletedCasualMatches: casual.count ?? 0,
+    deletedUsers,
     ranAt: now,
   });
 }

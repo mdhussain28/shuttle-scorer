@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { getSupabase } from "@/lib/supabase";
 import { Icon } from "@/components/Icon";
+import { useRole } from "@/lib/useRole";
 
 /** Page frame: sign-in check, header with back link and sign-out. */
 export function Shell({
@@ -19,6 +20,7 @@ export function Shell({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const role = useRole();
   const [ready, setReady] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
 
@@ -39,6 +41,15 @@ export function Shell({
     });
     return () => sub.subscription.unsubscribe();
   }, [router]);
+
+  // An account whose deletion time has passed is signed out straight away.
+  useEffect(() => {
+    if (role.expiresAt && new Date(role.expiresAt).getTime() <= Date.now()) {
+      void getSupabase()
+        .auth.signOut()
+        .then(() => router.replace("/login?expired=1"));
+    }
+  }, [role.expiresAt, router]);
 
   async function signOut() {
     await getSupabase().auth.signOut();
@@ -77,6 +88,20 @@ export function Shell({
           )}
           <h1 className="min-w-0 flex-1 truncate text-base font-semibold">{title}</h1>
           {actions}
+          {role.isAdmin && (
+            <Link
+              href="/admin"
+              className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              <Icon name="shield" size={16} />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+          )}
+          {!role.loading && role.userId && (
+            <span className={`badge hidden sm:inline-flex ${role.isUmpire ? "badge-neutral" : "badge-green"}`} title={role.email}>
+              {role.isUmpire ? "User" : "Admin"}
+            </span>
+          )}
           <button
             onClick={signOut}
             aria-label="Sign out"

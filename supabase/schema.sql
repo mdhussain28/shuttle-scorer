@@ -119,10 +119,15 @@ create index if not exists idx_tournaments_expires   on public.tournaments(expir
 create index if not exists idx_tournaments_owner     on public.tournaments(owner_id);
 
 -- ---------------------------------------------------------------------------
--- Umpires (version 3)
--- The organiser creates umpire accounts from the Tournament page. Those accounts
--- carry app_metadata.role = 'umpire' (set only by the server, users cannot change it)
--- and are linked to a tournament in tournament_members.
+-- Accounts, roles and access (versions 3 and 4)
+--
+--  * Admin: full rights over every tournament and user. Any account that is not
+--    marked as a user counts as an admin, so your existing login keeps working.
+--  * User: an account created by an admin (app_metadata.role = 'umpire'; the role
+--    is set by the server and cannot be changed by the user). Users see only the
+--    tournaments they are assigned to and can start and score matches there.
+--  * A user can have an expiry time. After it passes they lose all access
+--    immediately, and the daily cleanup deletes the account.
 -- ---------------------------------------------------------------------------
 
 create table if not exists public.tournament_members (
@@ -134,24 +139,52 @@ create table if not exists public.tournament_members (
 );
 create index if not exists idx_members_user on public.tournament_members(user_id);
 
+-- One row per account created from the Admin page.
+create table if not exists public.app_users (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  email      text not null,
+  role       text not null default 'user' check (role in ('user', 'admin')),
+  expires_at timestamptz,
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_app_users_expires on public.app_users(expires_at);
+
+-- Accounts made with the first umpire version get a row too.
+insert into public.app_users (user_id, email, role)
+select id, email, 'user' from auth.users
+where raw_app_meta_data ->> 'role' = 'umpire'
+on conflict (user_id) do nothing;
+
 create or replace function public.is_umpire() returns boolean
 language sql stable as $$
   select coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'umpire'
 $$;
 
-create or replace function public.is_tournament_owner(tid uuid) returns boolean
+create or replace function public.is_admin() returns boolean
+language sql stable as $$
+  select auth.uid() is not null and not public.is_umpire()
+$$;
+
+-- False once the signed-in account's expiry time has passed.
+create or replace function public.user_active() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.tournaments t where t.id = tid and t.owner_id = auth.uid())
+  select not exists (
+    select 1 from public.app_users u
+    where u.user_id = auth.uid() and u.expires_at is not null and u.expires_at <= now()
+  )
 $$;
 
 create or replace function public.is_tournament_member(tid uuid) returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.tournament_members m where m.tournament_id = tid and m.user_id = auth.uid())
+  select public.user_active() and exists (
+    select 1 from public.tournament_members m where m.tournament_id = tid and m.user_id = auth.uid()
+  )
 $$;
 
 create or replace function public.is_category_member(cid uuid) returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (
+  select public.user_active() and exists (
     select 1 from public.categories c
     join public.tournament_members m on m.tournament_id = c.tournament_id
     where c.id = cid and m.user_id = auth.uid()
@@ -160,23 +193,24 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- Row level security
---  * The organiser owns their rows and can do everything with them.
---  * Umpires can read the tournaments they were added to, and can create and
---    score matches in them. They cannot create, rename or delete anything else.
 -- ---------------------------------------------------------------------------
 
 do $$
 declare t text;
 begin
-  foreach t in array array['tournaments', 'categories', 'pools', 'entries', 'matches'] loop
+  foreach t in array array['tournaments', 'categories', 'pools', 'entries', 'matches', 'tournament_members', 'app_users'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists "owner full access" on public.%I', t);
+    execute format('drop policy if exists "admin full access" on public.%I', t);
     execute format(
-      'create policy "owner full access" on public.%I for all to authenticated using (owner_id = auth.uid() and not public.is_umpire()) with check (owner_id = auth.uid() and not public.is_umpire())',
+      'create policy "admin full access" on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())',
       t
     );
   end loop;
 end $$;
+
+drop policy if exists "organiser tournament matches" on public.matches;
+drop policy if exists "organiser manages umpires" on public.tournament_members;
 
 drop policy if exists "umpire read" on public.tournaments;
 create policy "umpire read" on public.tournaments for select to authenticated
@@ -194,13 +228,6 @@ drop policy if exists "umpire read" on public.entries;
 create policy "umpire read" on public.entries for select to authenticated
   using (public.is_category_member(category_id));
 
--- Matches: the organiser sees and manages every match in their tournaments,
--- including the ones umpires created.
-drop policy if exists "organiser tournament matches" on public.matches;
-create policy "organiser tournament matches" on public.matches for all to authenticated
-  using (tournament_id is not null and public.is_tournament_owner(tournament_id) and not public.is_umpire())
-  with check (tournament_id is not null and public.is_tournament_owner(tournament_id) and not public.is_umpire());
-
 drop policy if exists "umpire read matches" on public.matches;
 create policy "umpire read matches" on public.matches for select to authenticated
   using (tournament_id is not null and public.is_tournament_member(tournament_id));
@@ -214,14 +241,12 @@ create policy "umpire score matches" on public.matches for update to authenticat
   using (tournament_id is not null and public.is_tournament_member(tournament_id))
   with check (tournament_id is not null and public.is_tournament_member(tournament_id));
 
--- Umpire list: the organiser manages it, an umpire can see their own rows.
-alter table public.tournament_members enable row level security;
-drop policy if exists "organiser manages umpires" on public.tournament_members;
-create policy "organiser manages umpires" on public.tournament_members for all to authenticated
-  using (public.is_tournament_owner(tournament_id) and not public.is_umpire())
-  with check (public.is_tournament_owner(tournament_id) and not public.is_umpire());
 drop policy if exists "umpire sees own membership" on public.tournament_members;
 create policy "umpire sees own membership" on public.tournament_members for select to authenticated
+  using (user_id = auth.uid() and public.user_active());
+
+drop policy if exists "user sees own account" on public.app_users;
+create policy "user sees own account" on public.app_users for select to authenticated
   using (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------

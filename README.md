@@ -14,7 +14,7 @@ Badminton tournament and match scoring. Next.js (App Router) + Supabase, built t
 - **Golden point** (no deuce) can be switched on for any match: at 20-20 in a 21-point set the next point wins.
 - **Tie-break rules are selectable** per tournament: for two level teams use head-to-head or a decider match; for three or more use set and points difference or decider matches.
 - **Knockout stage**: when every pool match is played, choose semi-finals or quarter-finals. The app maps the teams across pools (for example Group A winner vs Group B runner-up), builds the bracket, and moves winners forward through the final and third-place match.
-- **Umpire logins**: the organiser creates an email and password for each umpire on the Tournament page. Umpires can sign in only with those details (public sign-up stays off), see only the tournaments they were added to, and can start and score matches there. They cannot change teams, categories, pools or rules, create the knockout stage, or delete anything.
+- **Admin console and roles**: sign in as Admin or User. Admins have full rights, see every tournament and manage accounts (create, assign to tournaments, reset passwords, delete, and set an automatic deletion time). Users score matches only in the tournaments assigned to them.
 - Tournament data (and casual matches) are deleted automatically **3 months** after creation.
 
 ## 1. Set up Supabase (5 minutes)
@@ -27,11 +27,19 @@ Badminton tournament and match scoring. Next.js (App Router) + Supabase, built t
 4. **Authentication -> Sign In / Providers -> Email**: switch **off** "Allow new users to sign up" so nobody else can create an account.
 5. **Project Settings -> API**: copy the **Project URL**, the **anon public** key and the **service_role** key.
 
-### Umpires
+### Admin console, users and logins
 
-Nothing extra to configure beyond `SUPABASE_SERVICE_ROLE_KEY` (already needed for the cleanup job). Open a tournament, find **Umpires**, enter the umpire's email, keep or change the generated password, and press **Create umpire login**. Copy the login details and send them to the umpire. You can reset a password or remove an umpire's access at any time. Removing an umpire keeps the matches they scored.
+- **Sign-in:** the login screen asks whether you are signing in as **Admin** or **User**. The account must match the choice. Public sign-up stays off, so only accounts an admin creates can sign in.
+- **Admin:** full rights over every tournament and every account. The login you made in Supabase keeps working as an admin. Admins can also create more admins.
+- **User:** an account an admin creates for scoring. A user sees only the tournaments assigned to them and can start and score matches there. They cannot change teams, categories, pools or rules, create the knockout stage, delete anything, create tournaments, or score casual matches.
+- **Admin console** (the shield icon in the header, or the card on the home page):
+  - *Overview*: tournaments, live matches, accounts, and accounts about to be deleted.
+  - *Users*: create accounts (email, password, type), assign or remove tournament access, reset passwords, delete accounts, and set the **automatic deletion time**.
+  - *Tournaments*: every tournament with its categories, matches, live matches and assigned users; open or delete any of them.
+- **Automatic deletion:** when creating a user (or later, from the user's row) choose *never*, 1/3/7/30/90 days, or an exact date and time. When the time passes the account **loses all access immediately** (enforced in the database) and is signed out. The account itself is deleted by the daily cleanup job, or as soon as an admin opens the Users list. Matches the account scored are kept and handed to an admin.
+- The tournament page has a **Users with access** card to assign existing users quickly.
 
-Umpire accounts are marked on the server, so they cannot be used to create tournaments or casual matches. The rules are enforced in the database (`supabase/schema.sql`, row level security), not just hidden in the screens.
+Needs `SUPABASE_SERVICE_ROLE_KEY` on the server (already used by the cleanup job). It must never be committed to GitHub or exposed to the browser. After updating, re-run `supabase/schema.sql` once.
 
 ## 2. Run it locally (optional)
 

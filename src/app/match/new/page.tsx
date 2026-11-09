@@ -208,7 +208,7 @@ function SetupContent() {
   if (role.isUmpire && !categoryId) {
     return (
       <p className="text-sm text-neutral-500">
-        Umpire accounts score matches inside a tournament. Open your tournament and use New match in a pool.
+        User accounts score matches inside a tournament. Open your tournament and use New match in a pool.
       </p>
     );
   }

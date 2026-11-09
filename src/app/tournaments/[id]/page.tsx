@@ -6,7 +6,7 @@ import { Shell } from "@/components/Shell";
 import { CategorySection } from "@/components/CategorySection";
 import { Icon } from "@/components/Icon";
 import { Segmented } from "@/components/Segmented";
-import { UmpirePanel } from "@/components/UmpirePanel";
+import { AccessPanel } from "@/components/AccessPanel";
 import { useRole } from "@/lib/useRole";
 import { getSupabase } from "@/lib/supabase";
 import type { Category, Tournament } from "@/lib/types";
@@ -146,7 +146,7 @@ function TournamentContent({ id }: { id: string }) {
             {t.points_per_win} table points per win · two level teams: {twoWay === "decider" ? "decider match" : "head-to-head"} · three or more:{" "}
             {multiWay === "decider" ? "decider matches" : "set and points difference"}
           </p>
-          <p className="text-xs text-neutral-500">You are signed in as an umpire. Only the organiser can change the setup.</p>
+          <p className="text-xs text-neutral-500">You are signed in as a user. Only the organiser can change the setup.</p>
         </section>
       ) : (
       <section className="card space-y-5">
@@ -196,7 +196,7 @@ function TournamentContent({ id }: { id: string }) {
       </section>
       )}
 
-      {!readOnly && <UmpirePanel tournamentId={id} />}
+      {!readOnly && <AccessPanel tournamentId={id} />}
 
       {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 

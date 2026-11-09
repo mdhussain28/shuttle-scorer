@@ -52,15 +52,21 @@ function HomeContent() {
       title: "Casual match",
       text: "Score a single game without any setup",
     },
+    {
+      href: "/admin",
+      icon: "shield" as const,
+      title: "Admin console",
+      text: "Users, access and every tournament in one place",
+    },
   ];
 
-  // Umpires only score matches in tournaments the organiser added them to.
+  // Umpires only score matches in tournaments an admin assigned to them.
   const actions = role.isUmpire ? [] : allActions;
 
   return (
     <div className="space-y-8">
       {actions.length > 0 && (
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         {actions.map((a) => (
           <Link
             key={a.href}
