@@ -20,7 +20,10 @@ export function PublicStandings({
   /** When the knockout stage exists, the teams that actually qualified. */
   qualified?: Set<string>;
 }) {
-  if (rows.length === 0) return <p className="text-sm text-neutral-500">No teams or players in this pool yet.</p>;
+  if (rows.length === 0) return <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-sm text-neutral-500">
+        <img src="/art/shuttle.svg" alt="" width={44} height={44} className="h-11 w-11 opacity-80" />
+        No teams or players in this pool yet.
+      </div>;
 
   const isIn = (r: StandingRow) => (qualified ? qualified.has(r.id) : r.rank <= cut);
 
