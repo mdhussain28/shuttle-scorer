@@ -287,7 +287,7 @@ function MatchContent({ id }: { id: string }) {
         </Link>
         {crumb.length > 0 && <span className="min-w-0 flex-1 truncate text-neutral-500">{crumb.join(" · ")}</span>}
         {crumb.length === 0 && <span className="flex-1" />}
-        {match.tournament_id && !role.isUmpire && (
+        {match.tournament_id && role.canHost && (
           <>
             <button
               className={`btn btn-sm ${isPublic ? "btn-secondary" : "btn-ghost"}`}
@@ -415,7 +415,7 @@ function MatchContent({ id }: { id: string }) {
           <Icon name="undo" size={16} />
           Undo last point
         </button>
-        {!role.isUmpire && (
+        {(role.canHost || !match.tournament_id) && (
           <button className="btn btn-ghost btn-sm text-red-700 dark:text-red-400" onClick={() => void deleteMatch()}>
             <Icon name="trash" size={14} />
             Delete match

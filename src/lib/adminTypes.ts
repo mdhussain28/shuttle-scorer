@@ -4,6 +4,12 @@ export interface AdminUser {
   role: "admin" | "user";
   createdAt: string;
   lastSignInAt: string | null;
+  /** Users only: may create and manage their own tournaments. */
+  canHost: boolean;
+  /** Users only: may create umpire accounts for their tournaments. */
+  canAddUmpires: boolean;
+  /** Email of the account that created this one. */
+  createdBy: string | null;
   /** Automatic deletion time, or null when the account is kept. */
   expiresAt: string | null;
   tournamentIds: string[];

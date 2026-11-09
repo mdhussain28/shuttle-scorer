@@ -23,11 +23,19 @@ export const createUser = (body: {
   email: string;
   password: string;
   role: "user" | "admin";
+  canHost: boolean;
+  canAddUmpires: boolean;
   expiresAt: string | null;
   tournamentIds: string[];
 }) => request("POST", body);
 
-export const updateUser = (body: { userId: string; password?: string; expiresAt?: string | null }) =>
+export const updateUser = (body: {
+  userId: string;
+  password?: string;
+  expiresAt?: string | null;
+  canHost?: boolean;
+  canAddUmpires?: boolean;
+}) =>
   request("PATCH", body);
 
 export const deleteUser = (userId: string) => request("DELETE", { userId });

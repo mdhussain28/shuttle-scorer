@@ -45,7 +45,7 @@ export function AdminOverview({
           icon="users"
           label="Accounts"
           value={users.length}
-          hint={`${users.filter((u) => u.role === "user").length} users, ${users.filter((u) => u.role === "admin").length} admins`}
+          hint={`${users.filter((u) => u.role === "user" && !u.canHost).length} scoring users, ${users.filter((u) => u.role === "user" && u.canHost).length} hosts, ${users.filter((u) => u.role === "admin").length} admins`}
         />
       </div>
 

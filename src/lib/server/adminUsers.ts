@@ -22,6 +22,25 @@ export async function requireAdmin(request: Request, db: SupabaseClient): Promis
   return { id: data.user.id, email: data.user.email ?? "" };
 }
 
+/** Confirms the caller may add umpires: an admin, or a user whose admin switched "can add umpires" on. */
+export async function requireUmpireManager(
+  request: Request,
+  db: SupabaseClient,
+): Promise<{ id: string; email: string; isAdmin: boolean } | Fail> {
+  const token = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!token) return fail("Sign in first.", 401);
+  const { data, error } = await db.auth.getUser(token);
+  if (error || !data.user) return fail("Your session has expired. Sign in again.", 401);
+  const id = data.user.id;
+  const email = data.user.email ?? "";
+  if (data.user.app_metadata?.role !== "umpire") return { id, email, isAdmin: true };
+  const own = await db.from("app_users").select("can_add_umpires,expires_at").eq("user_id", id).maybeSingle();
+  const row = own.data as { can_add_umpires: boolean; expires_at: string | null } | null;
+  if (!row || row.expires_at && new Date(row.expires_at).getTime() <= Date.now()) return fail("This account is not active.", 403);
+  if (!row.can_add_umpires) return fail("An admin has not allowed your account to add umpires.", 403);
+  return { id, email, isAdmin: false };
+}
+
 export interface AccountUser {
   id: string;
   email: string;

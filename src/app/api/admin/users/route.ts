@@ -5,8 +5,8 @@ import {
 
 // Admin-only account management. It runs on the server because it needs the service key.
 //   GET     list every account with its expiry and tournaments
-//   POST    { email, password, role, expiresAt, tournamentIds }  create an account
-//   PATCH   { userId, password?, expiresAt? }                     reset password / change or clear expiry
+//   POST    { email, password, role, canHost, canAddUmpires, expiresAt, tournamentIds }  create an account
+//   PATCH   { userId, password?, expiresAt?, canHost?, canAddUmpires? }  reset password / expiry / permissions
 //   DELETE  { userId }                                            delete an account
 
 export const dynamic = "force-dynamic";
@@ -33,14 +33,14 @@ export async function GET(request: Request) {
     await purgeExpiredUsers(db, me.id);
     const [users, profiles, members] = await Promise.all([
       listAllUsers(db),
-      db.from("app_users").select("user_id,expires_at"),
+      db.from("app_users").select("user_id,expires_at,can_host,can_add_umpires,created_by"),
       db.from("tournament_members").select("user_id,tournament_id"),
     ]);
     if (profiles.error) return reply(fail(profiles.error.message, 500));
     if (members.error) return reply(fail(members.error.message, 500));
-    const expiry = new Map<string, string | null>(
-      (profiles.data as Array<{ user_id: string; expires_at: string | null }>).map((p) => [p.user_id, p.expires_at]),
-    );
+    type Profile = { user_id: string; expires_at: string | null; can_host: boolean; can_add_umpires: boolean; created_by: string | null };
+    const prof = new Map<string, Profile>((profiles.data as Profile[]).map((p) => [p.user_id, p]));
+    const emailOf = new Map(users.map((u) => [u.id, u.email]));
     const tids = new Map<string, string[]>();
     for (const m of members.data as Array<{ user_id: string; tournament_id: string }>) {
       tids.set(m.user_id, [...(tids.get(m.user_id) ?? []), m.tournament_id]);
@@ -48,7 +48,17 @@ export async function GET(request: Request) {
     return NextResponse.json({
       me: me.id,
       users: users
-        .map((u) => ({ ...u, expiresAt: expiry.get(u.id) ?? null, tournamentIds: tids.get(u.id) ?? [] }))
+        .map((u) => {
+          const pr = prof.get(u.id);
+          return {
+            ...u,
+            expiresAt: pr?.expires_at ?? null,
+            canHost: pr?.can_host ?? false,
+            canAddUmpires: pr?.can_add_umpires ?? false,
+            createdBy: pr?.created_by ? (emailOf.get(pr.created_by) ?? null) : null,
+            tournamentIds: tids.get(u.id) ?? [],
+          };
+        })
         .sort((a, b) => (a.role === b.role ? a.email.localeCompare(b.email) : a.role === "admin" ? -1 : 1)),
     });
   } catch (e) {
@@ -68,6 +78,8 @@ export async function POST(request: Request) {
   const role = body.role === "admin" ? "admin" : "user";
   if (!EMAIL.test(email)) return reply(fail("Enter a valid email address.", 400));
   if (password.length < 8) return reply(fail("The password must be at least 8 characters.", 400));
+  const canHost = role === "user" && body.canHost === true;
+  const canAddUmpires = role === "user" && body.canAddUmpires === true;
   const expiresAt = parseExpiry(body.expiresAt);
   if (expiresAt === undefined) return reply(fail("The deletion time must be in the future.", 400));
   const tournamentIds: string[] = role === "user" && Array.isArray(body.tournamentIds) ? body.tournamentIds.map(String) : [];
@@ -86,7 +98,10 @@ export async function POST(request: Request) {
 
   const profile = await db
     .from("app_users")
-    .upsert({ user_id: user.id, email, role, expires_at: expiresAt, created_by: me.id }, { onConflict: "user_id" });
+    .upsert(
+      { user_id: user.id, email, role, expires_at: expiresAt, created_by: me.id, can_host: canHost, can_add_umpires: canAddUmpires },
+      { onConflict: "user_id" },
+    );
   if (profile.error) {
     await db.auth.admin.deleteUser(user.id);
     return reply(fail(profile.error.message.includes("app_users") ? `${profile.error.message}. Run the latest supabase/schema.sql.` : profile.error.message, 500));
@@ -127,6 +142,14 @@ export async function PATCH(request: Request) {
     const res = await db
       .from("app_users")
       .upsert({ user_id: userId, email: target.email ?? "", role, expires_at: expiresAt }, { onConflict: "user_id" });
+    if (res.error) return reply(fail(res.error.message, 500));
+  }
+  if (typeof body.canHost === "boolean" || typeof body.canAddUmpires === "boolean") {
+    if (target.app_metadata?.role !== "umpire") return reply(fail("Admins already have every permission.", 400));
+    const patch: Record<string, boolean> = {};
+    if (typeof body.canHost === "boolean") patch.can_host = body.canHost;
+    if (typeof body.canAddUmpires === "boolean") patch.can_add_umpires = body.canAddUmpires;
+    const res = await db.from("app_users").update(patch).eq("user_id", userId);
     if (res.error) return reply(fail(res.error.message, 500));
   }
   return NextResponse.json({ ok: true });

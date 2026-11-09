@@ -32,13 +32,18 @@ Badminton tournament and match scoring. Next.js (App Router) + Supabase, built t
 
 - **Sign-in:** the login screen asks whether you are signing in as **Admin** or **User**. The account must match the choice. Public sign-up stays off, so only accounts an admin creates can sign in.
 - **Admin:** full rights over every tournament and every account. The login you made in Supabase keeps working as an admin. Admins can also create more admins.
-- **User:** an account an admin creates for scoring. A user sees only the tournaments assigned to them and can start and score matches there. They cannot change teams, categories, pools or rules, create the knockout stage, delete anything, create tournaments, or score casual matches.
+- **User:** an account an admin creates. When creating it (or later, in the user's row) the admin switches two permissions on or off:
+  - **Can host tournaments**: create and manage their own tournaments (teams, pools, knockout, public/private) and run casual matches. They see only their own tournaments.
+  - **Can add umpires**: create umpire logins (email + password, optional automatic deletion) for tournaments they host or are assigned to, reset those passwords, and delete those accounts.
+  - With both off, the user scores matches in the tournaments assigned to them and can still start their own casual matches.
+  - Admins see every account, including umpires added by users (the Users list shows who added each one), and can delete any of them.
 - **Admin console** (the shield icon in the header, or the card on the home page):
   - *Overview*: tournaments, live matches, accounts, and accounts about to be deleted.
   - *Users*: create accounts (email, password, type), assign or remove tournament access, reset passwords, delete accounts, and set the **automatic deletion time**.
   - *Tournaments*: every tournament with its categories, matches, live matches and assigned users; open or delete any of them.
 - **Automatic deletion:** when creating a user (or later, from the user's row) choose *never*, 1/3/7/30/90 days, or an exact date and time. When the time passes the account **loses all access immediately** (enforced in the database) and is signed out. The account itself is deleted by the daily cleanup job, or as soon as an admin opens the Users list. Matches the account scored are kept and handed to an admin.
-- The tournament page has a **Users with access** card to assign existing users quickly.
+- The tournament page has an **Umpires** card (admins and users allowed to add umpires) to create umpire logins, assign existing ones, reset passwords and delete them.
+- Upgrading: re-run the whole `supabase/schema.sql` (version 6 adds the two permission switches). Existing users keep working as scoring-only users.
 
 Needs `SUPABASE_SERVICE_ROLE_KEY` on the server (already used by the cleanup job). It must never be committed to GitHub or exposed to the browser. After updating, re-run `supabase/schema.sql` once.
 

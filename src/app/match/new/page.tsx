@@ -205,14 +205,6 @@ function SetupContent() {
   };
 
   if (loading || role.loading) return <p className="text-sm text-neutral-500">Loading…</p>;
-  if (role.isUmpire && !categoryId) {
-    return (
-      <p className="text-sm text-neutral-500">
-        User accounts score matches inside a tournament. Open your tournament and use New match in a pool.
-      </p>
-    );
-  }
-
   return (
     <div className="space-y-5">
       {category && (

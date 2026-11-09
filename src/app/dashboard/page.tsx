@@ -60,8 +60,10 @@ function HomeContent() {
     },
   ];
 
-  // Umpires only score matches in tournaments an admin assigned to them.
-  const actions = role.isUmpire ? [] : allActions;
+  // What a user sees depends on what the admin allowed: hosting, adding umpires, or scoring only.
+  const actions = allActions.filter((a) =>
+    a.href === "/admin" ? role.isAdmin : a.href === "/match/new" ? true : role.canHost,
+  );
 
   return (
     <div className="space-y-8">
@@ -99,8 +101,8 @@ function HomeContent() {
         ) : tournaments.length === 0 ? (
           <div className="card text-center text-sm text-neutral-500">
             <img src="/art/calendar.png" alt="" width={56} height={56} className="mx-auto mb-2 h-14 w-14" />
-            {role.isUmpire
-              ? "You have not been added to a tournament yet. Ask the organiser to add you."
+            {!role.canHost
+              ? "You have not been added to a tournament yet. Ask an admin or the tournament host to add you."
               : "No tournaments yet. Create your first one above."}
           </div>
         ) : (
@@ -128,7 +130,7 @@ function HomeContent() {
         )}
       </section>
 
-      {!role.isUmpire && <section>
+      <section>
         <h2 className="section-title mb-3">Recent casual matches</h2>
         {casual === null ? (
           <p className="text-sm text-neutral-500">Loading…</p>
@@ -168,7 +170,7 @@ function HomeContent() {
             ))}
           </ul>
         )}
-      </section>}
+      </section>
     </div>
   );
 }

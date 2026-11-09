@@ -112,7 +112,8 @@ function TournamentContent({ id }: { id: string }) {
   const twoWay: TwoWayRule = t.tie_two ?? "head_to_head";
   const multiWay: MultiWayRule = t.tie_multi ?? "set_point_diff";
   const rules = { pointsPerWin: t.points_per_win, twoWay, multiWay };
-  const readOnly = role.isUmpire;
+  // Admins edit everything. A user edits only tournaments they host, and only if an admin allowed hosting.
+  const readOnly = !(role.isAdmin || (role.canHost && t.owner_id === role.userId));
 
   return (
     <div className="space-y-6">
@@ -198,7 +199,7 @@ function TournamentContent({ id }: { id: string }) {
             {t.points_per_win} table points per win · two level teams: {twoWay === "decider" ? "decider match" : "head-to-head"} · three or more:{" "}
             {multiWay === "decider" ? "decider matches" : "set and points difference"}
           </p>
-          <p className="text-xs text-neutral-500">You are signed in as a user. Only the organiser can change the setup.</p>
+          <p className="text-xs text-neutral-500">Only the tournament host or an admin can change the setup.</p>
         </section>
       ) : (
       <section className="card space-y-5">
@@ -248,7 +249,7 @@ function TournamentContent({ id }: { id: string }) {
       </section>
       )}
 
-      {!readOnly && <AccessPanel tournamentId={id} />}
+      {role.canAddUmpires && <AccessPanel tournamentId={id} />}
 
       {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 

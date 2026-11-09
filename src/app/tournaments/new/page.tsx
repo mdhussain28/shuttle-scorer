@@ -10,8 +10,8 @@ function NewTournamentForm() {
   const router = useRouter();
   const role = useRole();
   useEffect(() => {
-    if (role.isUmpire) router.replace("/dashboard");
-  }, [role.isUmpire, router]);
+    if (!role.loading && !role.canHost) router.replace("/dashboard");
+  }, [role.loading, role.canHost, router]);
   const [name, setName] = useState("");
   const [venue, setVenue] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));

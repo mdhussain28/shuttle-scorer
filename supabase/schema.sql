@@ -325,3 +325,127 @@ create trigger trg_guard_match_visibility
 --      delete from public.matches where tournament_id is null and expires_at < now(); $$
 -- );
 -- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- Version 6: what a user may do is chosen by the admin per account
+--
+--  * can_host          the user can create and manage their own tournaments
+--  * can_add_umpires   the user can create umpire accounts (and assign them) for
+--                      tournaments they own or are assigned to
+--  * A user with neither switch on only scores matches in assigned tournaments.
+--  Admins can see and delete every account, including umpires added by users.
+-- ---------------------------------------------------------------------------
+
+alter table public.app_users add column if not exists can_host boolean not null default false;
+alter table public.app_users add column if not exists can_add_umpires boolean not null default false;
+
+create or replace function public.is_host() returns boolean
+language sql stable security definer set search_path = public as $$
+  select public.user_active() and exists (
+    select 1 from public.app_users u where u.user_id = auth.uid() and u.can_host
+  )
+$$;
+
+create or replace function public.can_add_umpires() returns boolean
+language sql stable security definer set search_path = public as $$
+  select public.user_active() and exists (
+    select 1 from public.app_users u where u.user_id = auth.uid() and u.can_add_umpires
+  )
+$$;
+
+create or replace function public.is_tournament_owner(tid uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select public.user_active() and exists (
+    select 1 from public.tournaments t where t.id = tid and t.owner_id = auth.uid()
+  )
+$$;
+
+create or replace function public.is_category_owner(cid uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select public.user_active() and exists (
+    select 1 from public.categories c
+    join public.tournaments t on t.id = c.tournament_id
+    where c.id = cid and t.owner_id = auth.uid()
+  )
+$$;
+
+-- Hosts manage their own tournaments.
+drop policy if exists "host own" on public.tournaments;
+create policy "host own" on public.tournaments for all to authenticated
+  using (public.is_host() and owner_id = auth.uid())
+  with check (public.is_host() and owner_id = auth.uid());
+
+drop policy if exists "host own" on public.categories;
+create policy "host own" on public.categories for all to authenticated
+  using (public.is_host() and public.is_tournament_owner(tournament_id))
+  with check (public.is_host() and public.is_tournament_owner(tournament_id));
+
+drop policy if exists "host own" on public.pools;
+create policy "host own" on public.pools for all to authenticated
+  using (public.is_host() and public.is_category_owner(category_id))
+  with check (public.is_host() and public.is_category_owner(category_id));
+
+drop policy if exists "host own" on public.entries;
+create policy "host own" on public.entries for all to authenticated
+  using (public.is_host() and public.is_category_owner(category_id))
+  with check (public.is_host() and public.is_category_owner(category_id));
+
+drop policy if exists "host own" on public.matches;
+create policy "host own" on public.matches for all to authenticated
+  using (public.is_host() and (owner_id = auth.uid() or (tournament_id is not null and public.is_tournament_owner(tournament_id))))
+  with check (
+    public.is_host() and (
+      (tournament_id is null and owner_id = auth.uid())
+      or (tournament_id is not null and public.is_tournament_owner(tournament_id))
+    )
+  );
+
+-- Umpire management: owners and permitted users manage the umpires they created.
+drop policy if exists "managers read members" on public.tournament_members;
+create policy "managers read members" on public.tournament_members for select to authenticated
+  using (public.is_tournament_owner(tournament_id) or (public.can_add_umpires() and public.is_tournament_member(tournament_id)));
+
+drop policy if exists "managers add members" on public.tournament_members;
+create policy "managers add members" on public.tournament_members for insert to authenticated
+  with check (
+    public.can_add_umpires()
+    and (public.is_tournament_owner(tournament_id) or public.is_tournament_member(tournament_id))
+    and exists (select 1 from public.app_users u where u.user_id = tournament_members.user_id and u.created_by = auth.uid())
+  );
+
+drop policy if exists "managers remove members" on public.tournament_members;
+create policy "managers remove members" on public.tournament_members for delete to authenticated
+  using (
+    (public.is_host() and public.is_tournament_owner(tournament_id))
+    or (
+      public.can_add_umpires()
+      and (public.is_tournament_owner(tournament_id) or public.is_tournament_member(tournament_id))
+      and exists (select 1 from public.app_users u where u.user_id = tournament_members.user_id and u.created_by = auth.uid())
+    )
+  );
+
+drop policy if exists "creator sees own accounts" on public.app_users;
+create policy "creator sees own accounts" on public.app_users for select to authenticated
+  using (created_by = auth.uid() and public.user_active());
+
+-- Only admins and hosts can change who sees a match.
+create or replace function public.guard_match_visibility() returns trigger
+language plpgsql as $$
+begin
+  if not public.is_admin() and not public.is_host() then
+    if tg_op = 'INSERT' then
+      new.is_public := true;
+    elsif new.is_public is distinct from old.is_public then
+      new.is_public := old.is_public;
+    end if;
+  end if;
+  return new;
+end
+$$;
+
+-- Version 6b: every active account may start, score and delete its own casual matches
+-- (matches that belong to no tournament), whether or not it may host tournaments.
+drop policy if exists "own casual matches" on public.matches;
+create policy "own casual matches" on public.matches for all to authenticated
+  using (tournament_id is null and owner_id = auth.uid() and public.user_active())
+  with check (tournament_id is null and owner_id = auth.uid() and public.user_active());

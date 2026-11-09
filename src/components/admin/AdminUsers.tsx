@@ -51,6 +51,8 @@ export function AdminUsers({
   const [password, setPassword] = useState(() => makePassword());
   const [expiry, setExpiry] = useState<ExpiryChoice>(NEVER);
   const [assign, setAssign] = useState<string[]>([]);
+  const [canHost, setCanHost] = useState(false);
+  const [canAddUmpires, setCanAddUmpires] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // per-user expiry editor
@@ -72,6 +74,8 @@ export function AdminUsers({
         email: email.trim(),
         password,
         role,
+        canHost: role === "user" && canHost,
+        canAddUmpires: role === "user" && canAddUmpires,
         expiresAt: when,
         tournamentIds: role === "user" ? assign : [],
       });
@@ -87,6 +91,8 @@ export function AdminUsers({
       setPassword(makePassword());
       setExpiry(NEVER);
       setAssign([]);
+      setCanHost(false);
+      setCanAddUmpires(false);
       setCreating(false);
       await onChanged();
     } catch (e) {
@@ -104,6 +110,16 @@ export function AdminUsers({
       : await sb.from("tournament_members").delete().eq("tournament_id", tid).eq("user_id", u.id);
     if (res.error) return setErr(res.error.message);
     await onChanged();
+  }
+
+  async function setPermission(u: AdminUser, change: { canHost?: boolean; canAddUmpires?: boolean }) {
+    setErr(null);
+    try {
+      await updateUser({ userId: u.id, ...change });
+      await onChanged();
+    } catch (e) {
+      setErr((e as Error).message);
+    }
   }
 
   async function saveExpiry(u: AdminUser) {
@@ -196,7 +212,7 @@ export function AdminUsers({
               value={role}
               onChange={setRole}
               options={[
-                { value: "user" as const, label: "User (scores matches)" },
+                { value: "user" as const, label: "User" },
                 { value: "admin" as const, label: "Admin (full access)" },
               ]}
             />
@@ -232,6 +248,26 @@ export function AdminUsers({
               </div>
             </div>
           </div>
+          {role === "user" && (
+            <fieldset className="space-y-2">
+              <legend className="label">What this user can do</legend>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-neutral-200 p-3 text-sm dark:border-neutral-800">
+                <input type="checkbox" className="mt-0.5" checked={canHost} onChange={(e) => setCanHost(e.target.checked)} />
+                <span>
+                  <span className="block font-medium">Can host tournaments</span>
+                  <span className="block text-xs text-neutral-500">Create tournaments, manage their teams, pools and knockout rounds, and run casual matches.</span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-neutral-200 p-3 text-sm dark:border-neutral-800">
+                <input type="checkbox" className="mt-0.5" checked={canAddUmpires} onChange={(e) => setCanAddUmpires(e.target.checked)} />
+                <span>
+                  <span className="block font-medium">Can add umpires</span>
+                  <span className="block text-xs text-neutral-500">Create umpire logins for tournaments they host or are assigned to. You can still see and delete those umpires.</span>
+                </span>
+              </label>
+              <p className="text-xs text-neutral-500">With both switched off, the user only scores matches in the tournaments below.</p>
+            </fieldset>
+          )}
           <div>
             <label className="label" htmlFor="new-expiry">Delete this account automatically</label>
             <ExpiryPicker id="new-expiry" value={expiry} onChange={setExpiry} />
@@ -297,7 +333,14 @@ export function AdminUsers({
                       <span className="block truncate text-xs text-neutral-500">
                         {u.role === "admin"
                           ? "Full access to everything"
-                          : `${u.tournamentIds.length} ${u.tournamentIds.length === 1 ? "tournament" : "tournaments"}`}
+                          : [
+                              u.canHost ? "Hosts tournaments" : "Scores matches",
+                              u.canAddUmpires ? "adds umpires" : null,
+                              `${u.tournamentIds.length} assigned`,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                        {u.createdBy && ` · Added by ${u.createdBy}`}
                         {" · "}
                         {u.lastSignInAt ? `Last sign-in ${fmtDateTime(u.lastSignInAt)}` : "Never signed in"}
                       </span>
@@ -320,7 +363,23 @@ export function AdminUsers({
 
                       {u.role === "user" && (
                         <div>
-                          <p className="section-title mb-2">Tournament access</p>
+                          <p className="section-title mb-2">Permissions</p>
+                          <div className="space-y-2">
+                            <label className="flex cursor-pointer items-center gap-3 text-sm">
+                              <input type="checkbox" checked={u.canHost} onChange={(e) => void setPermission(u, { canHost: e.target.checked })} />
+                              Can host tournaments
+                            </label>
+                            <label className="flex cursor-pointer items-center gap-3 text-sm">
+                              <input type="checkbox" checked={u.canAddUmpires} onChange={(e) => void setPermission(u, { canAddUmpires: e.target.checked })} />
+                              Can add umpires
+                            </label>
+                          </div>
+                        </div>
+                      )}
+
+                      {u.role === "user" && (
+                        <div>
+                          <p className="section-title mb-2">Tournament access (scoring)</p>
                           {tournaments.length === 0 ? (
                             <p className="text-sm text-neutral-500">There are no tournaments yet.</p>
                           ) : (

@@ -11,11 +11,15 @@ export interface Role {
   isUmpire: boolean;
   /** Admins have every right. Any account that is not a user counts as an admin. */
   isAdmin: boolean;
+  /** May create and manage own tournaments (always true for admins). */
+  canHost: boolean;
+  /** May create umpire accounts (always true for admins). */
+  canAddUmpires: boolean;
   /** When this account will be deleted automatically, if an admin set a time. */
   expiresAt: string | null;
 }
 
-const EMPTY: Role = { loading: false, userId: null, email: "", isUmpire: false, isAdmin: false, expiresAt: null };
+const EMPTY: Role = { loading: false, userId: null, email: "", isUmpire: false, isAdmin: false, canHost: false, canAddUmpires: false, expiresAt: null };
 
 /** Who is signed in. Pages use it to hide controls; the database enforces the same limits. */
 export function useRole(): Role {
@@ -33,9 +37,27 @@ export function useRole(): Role {
         }
         const isUmpire = u.app_metadata?.role === "umpire";
         let expiresAt: string | null = null;
-        const own = await sb.from("app_users").select("expires_at").eq("user_id", u.id).maybeSingle();
-        if (!own.error && own.data) expiresAt = (own.data as { expires_at: string | null }).expires_at;
-        if (alive) setRole({ loading: false, userId: u.id, email: u.email ?? "", isUmpire, isAdmin: !isUmpire, expiresAt });
+        let host = false;
+        let addUmpires = false;
+        const own = await sb.from("app_users").select("expires_at,can_host,can_add_umpires").eq("user_id", u.id).maybeSingle();
+        if (!own.error && own.data) {
+          const row = own.data as { expires_at: string | null; can_host: boolean; can_add_umpires: boolean };
+          expiresAt = row.expires_at;
+          host = row.can_host;
+          addUmpires = row.can_add_umpires;
+        }
+        if (alive) {
+          setRole({
+            loading: false,
+            userId: u.id,
+            email: u.email ?? "",
+            isUmpire,
+            isAdmin: !isUmpire,
+            canHost: !isUmpire || host,
+            canAddUmpires: !isUmpire || addUmpires,
+            expiresAt,
+          });
+        }
       } catch {
         if (alive) setRole(EMPTY);
       }
