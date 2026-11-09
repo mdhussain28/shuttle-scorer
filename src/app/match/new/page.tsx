@@ -230,9 +230,9 @@ function SetupContent() {
         {categoryId ? (
           locked ? (
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-sm">
-              <span className="truncate rounded-lg bg-neutral-50 px-3 py-2.5 font-medium dark:bg-neutral-800/60">{labelA || "…"}</span>
+              <span className="truncate rounded-xl bg-neutral-50 px-3 py-2.5 font-medium dark:bg-neutral-800/60">{labelA || "…"}</span>
               <span className="text-neutral-400">vs</span>
-              <span className="truncate rounded-lg bg-neutral-50 px-3 py-2.5 font-medium dark:bg-neutral-800/60">{labelB || "…"}</span>
+              <span className="truncate rounded-xl bg-neutral-50 px-3 py-2.5 font-medium dark:bg-neutral-800/60">{labelB || "…"}</span>
             </div>
           ) : (
             <>
@@ -404,14 +404,14 @@ function SetupContent() {
           </div>
         )}
         {serveSummary && (
-          <p className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+          <p className="flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2 text-sm text-brand-900 dark:bg-brand-950/40 dark:text-brand-300">
             <Icon name="info" size={16} className="mt-0.5 shrink-0" />
             {serveSummary}
           </p>
         )}
       </section>
 
-      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+      {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 
       <div className="flex gap-3">
         <Link href={cancelHref} className="btn btn-secondary">

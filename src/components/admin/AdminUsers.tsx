@@ -183,7 +183,7 @@ export function AdminUsers({
         </button>
       </div>
 
-      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+      {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
       {shown && <Credentials shown={shown} onHide={() => setShown(null)} />}
 
       {creating && (
@@ -245,7 +245,7 @@ export function AdminUsers({
               {tournaments.length === 0 ? (
                 <p className="text-sm text-neutral-500">No tournaments yet. You can assign them later.</p>
               ) : (
-                <ul className="max-h-44 divide-y divide-neutral-100 overflow-y-auto rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+                <ul className="max-h-44 divide-y divide-neutral-100 overflow-y-auto rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
                   {tournaments.map((t) => (
                     <li key={t.id}>
                       <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
@@ -324,7 +324,7 @@ export function AdminUsers({
                           {tournaments.length === 0 ? (
                             <p className="text-sm text-neutral-500">There are no tournaments yet.</p>
                           ) : (
-                            <ul className="max-h-48 divide-y divide-neutral-100 overflow-y-auto rounded-lg border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+                            <ul className="max-h-48 divide-y divide-neutral-100 overflow-y-auto rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
                               {tournaments.map((t) => (
                                 <li key={t.id}>
                                   <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">

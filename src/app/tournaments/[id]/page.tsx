@@ -198,7 +198,7 @@ function TournamentContent({ id }: { id: string }) {
 
       {!readOnly && <AccessPanel tournamentId={id} />}
 
-      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+      {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 
       <div>
         <h2 className="section-title mb-3">Categories</h2>

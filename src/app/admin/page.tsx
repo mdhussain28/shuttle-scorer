@@ -63,7 +63,7 @@ function AdminContent() {
   if (!role.isAdmin) {
     return (
       <div className="card mx-auto max-w-md space-y-3 text-center">
-        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500 dark:bg-neutral-800">
+        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500 dark:bg-neutral-800">
           <Icon name="lock" size={20} />
         </span>
         <p className="font-semibold">Admins only</p>
@@ -96,7 +96,7 @@ function AdminContent() {
         </button>
       </div>
 
-      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+      {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 
       {tab === "overview" && <AdminOverview tournaments={tournaments} matches={matches} users={users} />}
       {tab === "users" && <AdminUsers users={users} tournaments={tournaments} meId={meId} onChanged={load} />}

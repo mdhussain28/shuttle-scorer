@@ -31,8 +31,8 @@ export function Credentials({ shown, onHide }: { shown: Shown; onHide: () => voi
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30">
-      <p className="flex items-center gap-2 font-medium text-emerald-900 dark:text-emerald-200">
+    <div className="space-y-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm dark:border-green-900 dark:bg-green-950/30">
+      <p className="flex items-center gap-2 font-medium text-green-900 dark:text-green-200">
         <Icon name="check" size={16} />
         {shown.title}
       </p>

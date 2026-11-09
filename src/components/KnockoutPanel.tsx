@@ -80,7 +80,7 @@ export function KnockoutPanel({
   const allComplete = playable.length > 0 && playable.every((p) => p.complete);
 
   const banner = err && (
-    <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>
+    <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>
   );
 
   // ---------------------------------------------------------------- bracket view
@@ -109,7 +109,7 @@ export function KnockoutPanel({
               <span className="italic text-neutral-400">{f.bye ? "Bye" : (from ?? "To be decided")}</span>
             )}
           </span>
-          {won && <Icon name="check" size={14} className="text-emerald-600" />}
+          {won && <Icon name="check" size={14} className="text-green-600" />}
           {sets !== null && <span className="w-4 text-right tabular-nums">{sets}</span>}
         </div>
       );
@@ -130,7 +130,7 @@ export function KnockoutPanel({
       if (f.matchId && f.status === "live") {
         return (
           <>
-            <span className="badge badge-amber">Live</span>
+            <span className="badge badge-amber"><span className="h-1.5 w-1.5 animate-glow rounded-full bg-amber-500" />Live</span>
             <Link href={`/match/${f.matchId}`} className="btn btn-primary btn-sm">
               Continue
             </Link>
@@ -184,8 +184,8 @@ export function KnockoutPanel({
       <div className="space-y-4">
         {banner}
         {pod.champion && (
-          <div className="flex items-center gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
-            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-700 text-white">
+          <div className="flex items-center gap-4 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/30">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-700 text-white">
               <Icon name="trophy" size={22} />
             </span>
             <div className="min-w-0 text-sm">
@@ -204,7 +204,7 @@ export function KnockoutPanel({
               {fixtures
                 .filter((f) => f.stage === s)
                 .map((f) => (
-                  <div key={`${f.stage}${f.slot}`} className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+                  <div key={`${f.stage}${f.slot}`} className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
                     <div className="border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800/50">
                       {s === "final" || s === "third" ? STAGE_LABEL[s] : `${STAGE_SHORT[s]}${f.slot}`}
                     </div>
@@ -232,7 +232,7 @@ export function KnockoutPanel({
   // ------------------------------------------------------------------ not ready
   if (eligible.length === 0) {
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-700">
+      <div className="flex items-start gap-3 rounded-xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-700">
         <Icon name="lock" className="mt-0.5" />
         <p>Add pools with at least two teams or players each. The knockout stage unlocks once every pool match has been played.</p>
       </div>
@@ -242,7 +242,7 @@ export function KnockoutPanel({
   if (!allComplete) {
     const pct = total === 0 ? 0 : Math.round((played / total) * 100);
     return (
-      <div className="space-y-3 rounded-lg border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
+      <div className="space-y-3 rounded-xl border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
         <div className="flex items-start gap-3 text-sm text-neutral-600 dark:text-neutral-400">
           <Icon name="lock" className="mt-0.5" />
           <p>
@@ -254,7 +254,7 @@ export function KnockoutPanel({
           </p>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
-          <div className="h-full rounded-full bg-emerald-600" style={{ width: `${pct}%` }} />
+          <div className="glide h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />
         </div>
       </div>
     );
@@ -262,7 +262,7 @@ export function KnockoutPanel({
 
   if (readOnly) {
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-700">
+      <div className="flex items-start gap-3 rounded-xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-700">
         <Icon name="lock" className="mt-0.5" />
         <p>The organiser sets up the knockout stage. It appears here once they create it.</p>
       </div>
@@ -344,7 +344,7 @@ export function KnockoutPanel({
   return (
     <div className="space-y-4">
       {banner}
-      <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
+      <div className="flex items-center gap-2 rounded-xl bg-green-50 px-3 py-2 text-sm text-green-900 dark:bg-green-950/30 dark:text-green-200">
         <Icon name="check" size={16} />
         Pool stage complete. Choose the knockout round and the app will map the teams for you.
       </div>
@@ -388,7 +388,7 @@ export function KnockoutPanel({
         {eligible.map((p) => {
           const order = orderFor(p);
           return (
-            <div key={p.id} className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+            <div key={p.id} className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
               <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800/50">
                 <span>{p.name}</span>
                 <span>{order.filter((id) => isPicked(p, id)).length} advance</span>
@@ -448,20 +448,20 @@ export function KnockoutPanel({
       </div>
 
       {pendingDeciders > 0 && (
-        <p className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+        <p className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <Icon name="alert" size={16} className="mt-0.5" />
           Some teams still need a decider match. Play it from the pool card above, or set their order here after a draw of lots.
         </p>
       )}
       {levelInQualifying && pendingDeciders === 0 && (
-        <p className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+        <p className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <Icon name="alert" size={16} className="mt-0.5" />
           Teams marked “Level” are tied on every ranking rule. Use the arrows to set their order after the draw of lots.
         </p>
       )}
 
       {problem ? (
-        <p className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+        <p className="flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
           <Icon name="alert" size={16} className="mt-0.5" />
           {problem}
         </p>
@@ -469,7 +469,7 @@ export function KnockoutPanel({
         slots && (
           <div>
             <h4 className="mb-2 text-sm font-semibold">Draw preview</h4>
-            <ol className="divide-y divide-neutral-100 overflow-hidden rounded-lg border border-neutral-200 text-sm dark:divide-neutral-800 dark:border-neutral-800">
+            <ol className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 text-sm dark:divide-neutral-800 dark:border-neutral-800">
               {Array.from({ length: slots.length / 2 }, (_, i) => (
                 <li key={i} className="flex items-center gap-3 px-3 py-2">
                   <span className="w-10 text-xs font-medium text-neutral-500">

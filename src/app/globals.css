@@ -5,36 +5,51 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
   }
   body {
-    @apply bg-neutral-100 text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+    @apply min-h-screen bg-neutral-100 text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+    background-image:
+      radial-gradient(900px 420px at 50% -80px, rgb(47 107 224 / 0.12), transparent 70%),
+      radial-gradient(600px 300px at 100% 0%, rgb(14 165 233 / 0.07), transparent 70%);
+    background-repeat: no-repeat;
+  }
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-image:
+        radial-gradient(900px 420px at 50% -80px, rgb(47 107 224 / 0.22), transparent 70%),
+        radial-gradient(600px 300px at 100% 0%, rgb(14 165 233 / 0.1), transparent 70%);
+    }
+  }
+  ::selection {
+    @apply bg-brand-200 text-brand-950;
   }
 }
 
 @layer components {
   /* Buttons */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/50 disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
   }
   .btn-primary {
-    @apply bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500;
+    @apply bg-gradient-to-b from-brand-600 to-brand-700 text-white shadow-sm shadow-brand-900/20 hover:from-brand-500 hover:to-brand-600 hover:shadow-md hover:shadow-brand-900/25 dark:from-brand-500 dark:to-brand-600 dark:hover:from-brand-400 dark:hover:to-brand-500;
   }
   .btn-secondary {
-    @apply border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800;
+    @apply border border-neutral-200 bg-white text-neutral-800 shadow-sm hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800;
   }
   .btn-danger {
     @apply bg-red-700 text-white hover:bg-red-800;
   }
   .btn-ghost {
-    @apply text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800;
+    @apply font-medium text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800;
   }
 
   /* Form fields */
   .input {
-    @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:bg-neutral-100 disabled:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:disabled:bg-neutral-800;
+    @apply w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm shadow-sm outline-none transition duration-150 placeholder:text-neutral-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:bg-neutral-100 disabled:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:disabled:bg-neutral-800;
   }
   .label {
     @apply mb-1.5 block text-xs font-medium text-neutral-600 dark:text-neutral-400;
@@ -42,7 +57,13 @@
 
   /* Surfaces */
   .card {
-    @apply rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900;
+    @apply rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-soft transition duration-200 ease-out dark:border-neutral-800 dark:bg-neutral-900;
+  }
+  a.card:hover {
+    @apply -translate-y-0.5 border-brand-300 shadow-lift dark:border-brand-700;
+  }
+  a.card:active {
+    @apply translate-y-0 shadow-soft;
   }
   .section-title {
     @apply text-xs font-semibold uppercase tracking-wider text-neutral-500;
@@ -50,13 +71,13 @@
 
   /* Status badges */
   .badge {
-    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset;
   }
   .badge-neutral {
     @apply bg-neutral-100 text-neutral-700 ring-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:ring-neutral-700;
   }
   .badge-green {
-    @apply bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-900;
+    @apply bg-green-50 text-green-800 ring-green-200 dark:bg-green-950/50 dark:text-green-300 dark:ring-green-900;
   }
   .badge-amber {
     @apply bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900;
@@ -64,15 +85,57 @@
   .badge-red {
     @apply bg-red-50 text-red-800 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900;
   }
+  .badge-blue {
+    @apply bg-brand-50 text-brand-800 ring-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:ring-brand-800;
+  }
 
   /* Segmented control */
   .seg {
-    @apply flex w-full gap-1 rounded-lg bg-neutral-200/70 p-1 dark:bg-neutral-800;
+    @apply flex w-full gap-1 rounded-xl bg-neutral-200/70 p-1 dark:bg-neutral-800;
   }
   .seg-btn {
-    @apply flex-1 rounded-md px-3 py-1.5 text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100;
+    @apply flex-1 rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 transition duration-200 hover:text-neutral-900 active:scale-[0.97] dark:text-neutral-400 dark:hover:text-neutral-100;
   }
   .seg-btn-active {
-    @apply bg-white text-neutral-900 shadow-sm hover:text-neutral-900 dark:bg-neutral-700 dark:text-white dark:hover:text-white;
+    @apply bg-white text-brand-800 shadow-sm hover:text-brand-800 dark:bg-neutral-700 dark:text-white dark:hover:text-white;
+  }
+
+  /* Entrance animations. Lists reveal one item after another. */
+  .stagger > * {
+    animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0.02s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.07s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.12s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.17s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.22s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.27s; }
+  .stagger > *:nth-child(n + 7) { animation-delay: 0.3s; }
+}
+
+/* Progress bars and panels glide instead of jumping. */
+.glide {
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

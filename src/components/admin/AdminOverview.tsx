@@ -8,7 +8,7 @@ import { timeLeft } from "@/lib/format";
 function Stat({ icon, label, value, hint }: { icon: IconName; label: string; value: number; hint?: string }) {
   return (
     <div className="card flex items-center gap-4 !p-4">
-      <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-400">
         <Icon name={icon} size={20} />
       </span>
       <div className="min-w-0">
@@ -57,8 +57,8 @@ export function AdminOverview({
           <ul className="space-y-2">
             {live.map((m) => (
               <li key={m.id}>
-                <Link href={`/match/${m.id}`} className="card flex items-center gap-3 !p-4 transition-colors hover:border-emerald-600">
-                  <span className="badge badge-amber">Live</span>
+                <Link href={`/match/${m.id}`} className="card flex items-center gap-3 !p-4 transition-colors hover:border-brand-600">
+                  <span className="badge badge-amber"><span className="h-1.5 w-1.5 animate-glow rounded-full bg-amber-500" />Live</span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">
                       {m.a_label} <span className="font-normal text-neutral-400">vs</span> {m.b_label}

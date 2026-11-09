@@ -292,13 +292,13 @@ export function CategorySection({
       {open && (
         <>
           {err && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>
           )}
 
           {/* Teams and players */}
           {!readOnly && <div>
             <h3 className="section-title mb-3">Add a team or player</h3>
-            <form onSubmit={addEntry} className="space-y-3 rounded-lg bg-neutral-50 p-4 dark:bg-neutral-950/40">
+            <form onSubmit={addEntry} className="space-y-3 rounded-xl bg-neutral-50 p-4 dark:bg-neutral-950/40">
               <Segmented
                 ariaLabel="Entry type"
                 value={entryType}
@@ -341,7 +341,7 @@ export function CategorySection({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="section-title">Pools</h3>
-              <Link href={`/match/new?category=${category.id}`} className="text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+              <Link href={`/match/new?category=${category.id}`} className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
                 New match (any two)
               </Link>
             </div>
@@ -361,7 +361,7 @@ export function CategorySection({
               const { pool, rows, pending, complete, played, total } = t;
               const poolEntries = entries.filter((e) => e.pool_id === pool.id);
               return (
-                <div key={pool.id} className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+                <div key={pool.id} className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
                   <div className="mb-3 flex flex-wrap items-center gap-2">
                     <h4 className="font-semibold">{pool.name}</h4>
                     <span className="badge badge-neutral">{poolEntries.length} entries</span>
@@ -384,7 +384,7 @@ export function CategorySection({
                   <StandingsTable rows={rows} labels={labels} />
 
                   {complete && pending.length > 0 && (
-                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/30">
+                    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/30">
                       <p className="mb-2 flex items-center gap-2 font-medium text-amber-900 dark:text-amber-200">
                         <Icon name="flag" size={16} />
                         Decider needed
@@ -422,7 +422,7 @@ export function CategorySection({
             })}
 
             {unassigned.length > 0 && (
-              <div className="rounded-lg border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
+              <div className="rounded-xl border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
                 <h4 className="mb-1 font-semibold">Not in a pool</h4>
                 <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">{unassigned.map(entryRow)}</ul>
               </div>
@@ -472,7 +472,14 @@ export function CategorySection({
                           {m.sets_a}–{m.sets_b}
                         </span>
                         <span className={`badge ${m.status === "live" ? "badge-amber" : "badge-green"}`}>
-                          {m.status === "live" ? "Live" : "Final"}
+                          {m.status === "live" ? (
+                            <>
+                              <span className="h-1.5 w-1.5 animate-glow rounded-full bg-amber-500" />
+                              Live
+                            </>
+                          ) : (
+                            "Final"
+                          )}
                         </span>
                       </Link>
                     </li>

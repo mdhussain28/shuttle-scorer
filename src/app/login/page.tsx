@@ -88,16 +88,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6 py-10">
+    <main className="mx-auto flex min-h-screen max-w-sm animate-rise flex-col justify-center px-6 py-10">
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-700 text-white">
-          <Icon name="shuttle" size={28} />
-        </div>
+        <img src="/icon-512.png" alt="" width={84} height={84} className="mx-auto mb-5 h-[84px] w-[84px] rounded-[22px] shadow-lift" />
         <h1 className="text-2xl font-semibold tracking-tight">Shuttle Scorer</h1>
         <p className="mt-1 text-sm text-neutral-500">Sign in to continue</p>
       </div>
 
-      <div className="card space-y-5">
+      <div className="card space-y-5 !p-6">
         <div role="group" aria-label="Sign in as" className="grid grid-cols-2 gap-2">
           {(["admin", "user"] as Mode[]).map((m) => (
             <button
@@ -108,9 +106,9 @@ export default function LoginPage() {
                 setErr(null);
               }}
               aria-pressed={mode === m}
-              className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-3 text-sm font-medium transition-colors ${
+              className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
                 mode === m
-                  ? "border-emerald-600 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
+                  ? "border-brand-600 bg-brand-50 text-brand-900 dark:bg-brand-950/40 dark:text-brand-200"
                   : "border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
               }`}
             >
@@ -131,7 +129,7 @@ export default function LoginPage() {
             <input id="password" type="password" required autoComplete="current-password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           {err && (
-            <p className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+            <p className="flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
               <Icon name="alert" size={16} className="mt-0.5" />
               {err}
             </p>

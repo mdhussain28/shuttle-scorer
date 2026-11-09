@@ -66,14 +66,14 @@ function HomeContent() {
   return (
     <div className="space-y-8">
       {actions.length > 0 && (
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="stagger grid gap-3 sm:grid-cols-3">
         {actions.map((a) => (
           <Link
             key={a.href}
             href={a.href}
-            className="card group flex items-center gap-4 transition-colors hover:border-emerald-600"
+            className="card group flex items-center gap-4 transition-colors hover:border-brand-600"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-400">
               <Icon name={a.icon} size={22} />
             </span>
             <span className="min-w-0 flex-1">
@@ -86,7 +86,7 @@ function HomeContent() {
       </div>
       )}
 
-      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+      {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 
       <section>
         <h2 className="section-title mb-3">Tournaments</h2>
@@ -99,12 +99,12 @@ function HomeContent() {
               : "No tournaments yet. Create your first one above."}
           </div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="stagger space-y-2">
             {tournaments.map((t) => (
               <li key={t.id}>
                 <Link
                   href={`/tournaments/${t.id}`}
-                  className="card flex items-center gap-3 !p-4 transition-colors hover:border-emerald-600"
+                  className="card flex items-center gap-3 !p-4 transition-colors hover:border-brand-600"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{t.name}</p>
@@ -130,12 +130,12 @@ function HomeContent() {
         ) : casual.length === 0 ? (
           <div className="card text-center text-sm text-neutral-500">No casual matches yet.</div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="stagger space-y-2">
             {casual.map((m) => (
               <li key={m.id}>
                 <Link
                   href={`/match/${m.id}`}
-                  className="card flex items-center gap-3 !p-4 transition-colors hover:border-emerald-600"
+                  className="card flex items-center gap-3 !p-4 transition-colors hover:border-brand-600"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
@@ -149,7 +149,14 @@ function HomeContent() {
                     {m.sets_a}–{m.sets_b}
                   </span>
                   <span className={`badge ${m.status === "live" ? "badge-amber" : "badge-green"}`}>
-                    {m.status === "live" ? "Live" : "Final"}
+                    {m.status === "live" ? (
+                            <>
+                              <span className="h-1.5 w-1.5 animate-glow rounded-full bg-amber-500" />
+                              Live
+                            </>
+                          ) : (
+                            "Final"
+                          )}
                   </span>
                 </Link>
               </li>

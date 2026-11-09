@@ -36,7 +36,7 @@ export function AdminTournaments({
 
   return (
     <div className="space-y-3">
-      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+      {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
       <ul className="space-y-2">
         {tournaments.map((t) => {
           const mine = matches.filter((m) => m.tournament_id === t.id);

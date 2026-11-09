@@ -64,7 +64,7 @@ export function CourtView({ state, names }: { state: MatchState; names: Record<S
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Court positions">
-      <rect x="0" y="0" width={W} height={H} rx="18" className="fill-emerald-600/10 dark:fill-emerald-400/10" />
+      <rect x="0" y="0" width={W} height={H} rx="18" className="fill-green-600/10 dark:fill-green-400/10" />
       <g fill="none" strokeWidth="3" className="stroke-neutral-500/60">
         <rect x="20" y="20" width="840" height="360" />
         <line x1="20" y1="48" x2="860" y2="48" strokeDasharray="8 8" />
@@ -80,7 +80,7 @@ export function CourtView({ state, names }: { state: MatchState; names: Record<S
 
       {markers.map((m) => {
         const ring =
-          m.mark === "server" ? "stroke-emerald-500" : m.mark === "receiver" ? "stroke-amber-400" : "stroke-transparent";
+          m.mark === "server" ? "stroke-green-500" : m.mark === "receiver" ? "stroke-amber-400" : "stroke-transparent";
         const fill = m.side === "a" ? "fill-sky-600" : "fill-violet-600";
         return (
           <g key={m.key}>
@@ -101,7 +101,7 @@ export function CourtView({ state, names }: { state: MatchState; names: Record<S
             {m.mark !== "partner" && (
               <text
                 x={m.x} y={m.y - 52} textAnchor="middle" fontSize="20" fontWeight="800"
-                className={m.mark === "server" ? "fill-emerald-600 dark:fill-emerald-400" : "fill-amber-500"}
+                className={m.mark === "server" ? "fill-green-600 dark:fill-green-400" : "fill-amber-500"}
               >
                 {m.mark === "server" ? "SERVES" : "RECEIVES"}
               </text>

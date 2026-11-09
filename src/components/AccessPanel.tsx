@@ -76,7 +76,7 @@ export function AccessPanel({ tournamentId }: { tournamentId: string }) {
         <Icon name="users" className="text-neutral-500" />
         <h3 className="font-semibold">Users with access</h3>
         <span className="flex-1" />
-        <Link href="/admin" className="text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+        <Link href="/admin" className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
           Manage users
         </Link>
       </div>
@@ -84,7 +84,7 @@ export function AccessPanel({ tournamentId }: { tournamentId: string }) {
         Assigned users can start and score matches here. They cannot change teams, categories or rules, and cannot delete anything.
       </p>
 
-      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
+      {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 
       {members === null ? (
         <p className="text-sm text-neutral-500">Loading…</p>

@@ -183,7 +183,7 @@ function MatchContent({ id }: { id: string }) {
 
   if (loading) return <p className="text-sm text-neutral-500">Loading…</p>;
   if (loadError)
-    return <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{loadError}</p>;
+    return <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{loadError}</p>;
   if (!match) return null;
   if (!state) return <p className="text-sm text-neutral-500">This match’s data could not be read.</p>;
 
@@ -206,16 +206,16 @@ function MatchContent({ id }: { id: string }) {
     return (
       <div
         key={side}
-        className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-center ${
-          serving ? "border-emerald-500 bg-slate-800" : "border-slate-700 bg-slate-800/60"
+        className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-all duration-300 ${
+          serving ? "border-green-500 bg-slate-800 shadow-lg shadow-green-500/10" : "border-slate-700 bg-slate-800/60"
         }`}
       >
         <div className="flex max-w-full items-center gap-1.5 text-sm font-semibold text-slate-100">
-          {serving && <Icon name="shuttle" size={14} className="shrink-0 text-emerald-400" />}
+          {serving && <Icon name="shuttle" size={14} className="shrink-0 text-green-400" />}
           <span className="truncate">{labels[side]}</span>
         </div>
         {doubles && <div className="max-w-full truncate text-xs text-slate-400">{names[side].join(" & ")}</div>}
-        <div className="text-7xl font-bold leading-none tabular-nums text-white sm:text-8xl">{state.scores[side]}</div>
+        <div key={state.scores[side]} className="animate-pop text-7xl font-bold leading-none tabular-nums text-white sm:text-8xl">{state.scores[side]}</div>
         <div className="flex min-h-[1.5rem] items-center">
           {inSet && state.matchPoint[side] ? (
             <span className="rounded-md bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">Match point</span>
@@ -237,7 +237,7 @@ function MatchContent({ id }: { id: string }) {
 
   const saveBadge =
     saveState === "saved" ? (
-      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+      <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
         <Icon name="check" size={14} />
         Saved
       </span>
@@ -253,7 +253,7 @@ function MatchContent({ id }: { id: string }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-xs">
-        <Link href={backHref} className="inline-flex items-center gap-1 font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+        <Link href={backHref} className="inline-flex items-center gap-1 font-medium text-brand-700 hover:underline dark:text-brand-400">
           <Icon name="arrow-left" size={14} />
           {match.tournament_id ? "Tournament" : "Home"}
         </Link>
@@ -263,7 +263,7 @@ function MatchContent({ id }: { id: string }) {
       </div>
 
       {/* Scoreboard */}
-      <div className="space-y-4 rounded-2xl bg-slate-900 p-4 text-slate-100">
+      <div className="space-y-4 rounded-3xl bg-gradient-to-b from-slate-900 to-brand-950 p-4 text-slate-100 shadow-lift">
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-400">
           <span>Best of {cfg.bestOf}</span>
           <span>{cfg.pointsToWin} points</span>
@@ -284,14 +284,14 @@ function MatchContent({ id }: { id: string }) {
         </div>
 
         {inSet && state.goldenPointNow && (
-          <div className="flex items-center justify-center gap-2 rounded-lg bg-amber-500/15 px-4 py-2.5 text-sm font-semibold text-amber-300">
+          <div className="flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 px-4 py-2.5 text-sm font-semibold text-amber-300">
             <Icon name="bolt" size={16} />
             Golden point: next point wins the set
           </div>
         )}
 
         {state.notice && (
-          <div className="flex items-center justify-center gap-2 rounded-lg bg-sky-500/15 px-4 py-2.5 text-sm font-medium text-sky-200">
+          <div className="flex items-center justify-center gap-2 rounded-xl bg-sky-500/15 px-4 py-2.5 text-sm font-medium text-sky-200">
             <Icon name="clock" size={16} />
             {intervalAt(cfg.pointsToWin)} points reached: 60-second interval
             {state.notice === "interval_change_ends" ? " and change ends." : "."}
@@ -305,7 +305,7 @@ function MatchContent({ id }: { id: string }) {
         <CourtView state={state} names={names} />
         {inSet && (
           <p className="text-center text-sm">
-            <span className="font-semibold text-emerald-700 dark:text-emerald-400">{serverName}</span> serves from the{" "}
+            <span className="font-semibold text-green-700 dark:text-green-400">{serverName}</span> serves from the{" "}
             <span className="font-semibold">{state.server.court}</span> court to{" "}
             <span className="font-semibold text-amber-600 dark:text-amber-400">{receiverName}</span>
           </p>
@@ -313,7 +313,7 @@ function MatchContent({ id }: { id: string }) {
       </div>
 
       {state.phase === "between_sets" && lastSetWinner && lastSet && (
-        <div className="card space-y-3 !border-emerald-500">
+        <div className="card space-y-3 !border-brand-500">
           <p className="font-semibold">
             Set {state.setIndex + 1} goes to {labels[lastSetWinner]} ({lastSet[0]}–{lastSet[1]})
           </p>
@@ -346,8 +346,8 @@ function MatchContent({ id }: { id: string }) {
       )}
 
       {state.phase === "finished" && state.winner && (
-        <div className="card space-y-2 !border-emerald-500 text-center">
-          <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-700 text-white">
+        <div className="card space-y-2 !border-green-500 text-center">
+          <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-green-700 text-white">
             <Icon name="trophy" size={22} />
           </span>
           <p className="text-lg font-semibold">{labels[state.winner]} wins</p>

@@ -34,7 +34,7 @@ export function StandingsTable({
               <tr
                 key={r.id}
                 className={`border-b border-neutral-100 last:border-0 dark:border-neutral-800/70 ${
-                  leader ? "bg-emerald-50/70 dark:bg-emerald-950/20" : ""
+                  leader ? "bg-green-50/70 dark:bg-green-950/20" : ""
                 }`}
               >
                 <td className="py-2.5 pr-2 font-semibold tabular-nums">
