@@ -57,7 +57,7 @@ export function AdminOverview({
           <ul className="space-y-2">
             {live.map((m) => (
               <li key={m.id}>
-                <Link href={`/match/${m.id}`} className="card flex items-center gap-3 !p-4 transition-colors hover:border-brand-600">
+                <Link href={`/match/${m.id}`} className="card flex items-center gap-3 !p-4">
                   <span className="badge badge-amber"><span className="h-1.5 w-1.5 animate-glow rounded-full bg-amber-500" />Live</span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types src/lib/scoring/engine.test.ts src/lib/scoring/engine.golden.test.ts src/lib/scoring/standings.test.ts src/lib/scoring/standings.rules.test.ts src/lib/knockout.test.ts"
+    "test": "node --test --experimental-strip-types src/lib/scoring/engine.test.ts src/lib/scoring/engine.golden.test.ts src/lib/scoring/standings.test.ts src/lib/scoring/standings.rules.test.ts src/lib/knockout.test.ts src/lib/qualification.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

@@ -30,11 +30,11 @@ type MatchListItem = Pick<
   MatchRow,
   | "id" | "pool_id" | "entry_a_id" | "entry_b_id" | "a_label" | "b_label"
   | "status" | "winner" | "set_scores" | "sets_a" | "sets_b" | "created_at"
-  | "stage" | "slot" | "is_decider"
+  | "stage" | "slot" | "is_decider" | "is_public"
 >;
 
 const MATCH_COLUMNS =
-  "id,pool_id,entry_a_id,entry_b_id,a_label,b_label,status,winner,set_scores,sets_a,sets_b,created_at,stage,slot,is_decider";
+  "id,pool_id,entry_a_id,entry_b_id,a_label,b_label,status,winner,set_scores,sets_a,sets_b,created_at,stage,slot,is_decider,is_public";
 
 const SCHEMA_HINT = " Run the latest supabase/schema.sql in the Supabase SQL Editor.";
 
@@ -202,6 +202,13 @@ export function CategorySection({
 
   async function movePool(entry: Entry, poolId: string) {
     await mutate(getSupabase().from("entries").update({ pool_id: poolId || null }).eq("id", entry.id));
+  }
+
+  async function setVisibility(m: MatchListItem, isPublic: boolean) {
+    setErr(null);
+    const { error } = await getSupabase().from("matches").update({ is_public: isPublic }).eq("id", m.id);
+    if (error) return setErr(error.message.includes("column") ? error.message + SCHEMA_HINT : error.message);
+    setMatches((list) => list.map((x) => (x.id === m.id ? { ...x, is_public: isPublic } : x)));
   }
 
   async function removeEntry(entry: Entry) {
@@ -456,8 +463,8 @@ export function CategorySection({
                   const tag = stageName(m);
                   const poolLabel = m.pool_id ? pools.find((p) => p.id === m.pool_id)?.name : null;
                   return (
-                    <li key={m.id}>
-                      <Link href={`/match/${m.id}`} className="flex items-center gap-3 py-3 hover:opacity-80">
+                    <li key={m.id} className="flex items-center gap-2">
+                      <Link href={`/match/${m.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 hover:opacity-80">
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">
                             {m.a_label} <span className="font-normal text-neutral-400">vs</span> {m.b_label}
@@ -482,6 +489,20 @@ export function CategorySection({
                           )}
                         </span>
                       </Link>
+                      {!readOnly && (
+                        <button
+                          className={`btn btn-sm !px-2 ${m.is_public === false ? "btn-ghost text-neutral-400" : "btn-ghost text-brand-700 dark:text-brand-300"}`}
+                          onClick={() => void setVisibility(m, m.is_public === false)}
+                          aria-label={m.is_public === false ? "Private. Click to make public" : "Public. Click to make private"}
+                          title={
+                            m.is_public === false
+                              ? "Private: hidden from the public live page and points table. Click to show."
+                              : "Public: shown on the live page. Click to hide (it is also left out of the public points table)."
+                          }
+                        >
+                          <Icon name={m.is_public === false ? "eye-off" : "eye"} size={16} />
+                        </button>
+                      )}
                     </li>
                   );
                 })}

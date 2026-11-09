@@ -8,6 +8,8 @@ export interface Tournament {
   id: string;
   owner_id?: string;
   name: string;
+  /** Whether anyone with the link can watch this tournament. Optional until the latest schema.sql has run. */
+  is_public?: boolean;
   venue: string | null;
   start_date: string | null;
   points_per_win: number;
@@ -68,6 +70,8 @@ export interface MatchRow {
   stage?: Stage | null;
   slot?: number | null;
   is_decider?: boolean;
+  /** Whether the public live page may show this match. Optional until the latest schema.sql has run. */
+  is_public?: boolean;
   created_at: string;
   finished_at: string | null;
   expires_at: string;

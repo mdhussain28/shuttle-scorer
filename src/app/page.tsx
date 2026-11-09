@@ -42,19 +42,19 @@ function HomeContent() {
   const allActions = [
     {
       href: "/tournaments/new",
-      icon: "trophy" as const,
+      art: "/art/trophy.svg",
       title: "New tournament",
       text: "Categories, pools, rankings and knockout rounds",
     },
     {
       href: "/match/new",
-      icon: "shuttle" as const,
+      art: "/art/shuttle.svg",
       title: "Casual match",
       text: "Score a single game without any setup",
     },
     {
       href: "/admin",
-      icon: "shield" as const,
+      art: "/art/shield.svg",
       title: "Admin console",
       text: "Users, access and every tournament in one place",
     },
@@ -71,11 +71,15 @@ function HomeContent() {
           <Link
             key={a.href}
             href={a.href}
-            className="card group flex items-center gap-4 transition-colors hover:border-brand-600"
+            className="card group flex items-center gap-4"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-400">
-              <Icon name={a.icon} size={22} />
-            </span>
+            <img
+              src={a.art}
+              alt=""
+              width={64}
+              height={64}
+              className="h-16 w-16 shrink-0 rounded-2xl shadow-md shadow-brand-900/20 transition duration-300 group-hover:-rotate-3 group-hover:scale-110"
+            />
             <span className="min-w-0 flex-1">
               <span className="block font-semibold">{a.title}</span>
               <span className="block text-sm text-neutral-500">{a.text}</span>
@@ -104,7 +108,7 @@ function HomeContent() {
               <li key={t.id}>
                 <Link
                   href={`/tournaments/${t.id}`}
-                  className="card flex items-center gap-3 !p-4 transition-colors hover:border-brand-600"
+                  className="card flex items-center gap-3 !p-4"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{t.name}</p>
@@ -135,7 +139,7 @@ function HomeContent() {
               <li key={m.id}>
                 <Link
                   href={`/match/${m.id}`}
-                  className="card flex items-center gap-3 !p-4 transition-colors hover:border-brand-600"
+                  className="card flex items-center gap-3 !p-4"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">

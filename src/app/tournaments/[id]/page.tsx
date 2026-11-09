@@ -67,6 +67,17 @@ function TournamentContent({ id }: { id: string }) {
     return true;
   }
 
+  const [linkCopied, setLinkCopied] = useState(false);
+  async function copyPublicLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/watch/t/${id}`);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 1800);
+    } catch {
+      setErr("Could not copy the link. Select it and copy it manually.");
+    }
+  }
+
   async function addCategory(ev: FormEvent) {
     ev.preventDefault();
     const name = newCat.trim();
@@ -135,6 +146,47 @@ function TournamentContent({ id }: { id: string }) {
           </span>
         </div>
       </div>
+
+      {!readOnly && (
+        <section className="card space-y-3">
+          <div className="flex items-center gap-2">
+            <Icon name="globe" className="text-neutral-500" />
+            <h3 className="font-semibold">Public live page</h3>
+            <span className="flex-1" />
+            <span className={`badge ${t.is_public === false ? "badge-neutral" : "badge-green"}`}>
+              {t.is_public === false ? "Private" : "Public"}
+            </span>
+          </div>
+          <p className="text-sm text-neutral-500">
+            Anyone with the link can follow live scores, points tables and the knockout bracket without signing in. They cannot
+            change anything. Choose which individual matches are shown with the eye button in each category’s match list.
+          </p>
+          <Segmented
+            ariaLabel="Public live page"
+            value={t.is_public === false ? "off" : "on"}
+            onChange={(v) => void patch({ is_public: v === "on" })}
+            options={[
+              { value: "on", label: "Public" },
+              { value: "off", label: "Private" },
+            ]}
+          />
+          {t.is_public !== false && (
+            <div className="flex items-center gap-2 rounded-xl bg-neutral-50 p-2 pl-3 dark:bg-neutral-950/40">
+              <code className="min-w-0 flex-1 truncate text-xs text-neutral-600 dark:text-neutral-300">
+                {typeof window !== "undefined" ? window.location.origin : ""}/watch/t/{id}
+              </code>
+              <button className="btn btn-secondary btn-sm" onClick={() => void copyPublicLink()}>
+                <Icon name={linkCopied ? "check" : "copy"} size={14} />
+                {linkCopied ? "Copied" : "Copy link"}
+              </button>
+              <a className="btn btn-primary btn-sm" href={`/watch/t/${id}`} target="_blank" rel="noreferrer">
+                <Icon name="eye" size={14} />
+                Open
+              </a>
+            </div>
+          )}
+        </section>
+      )}
 
       {readOnly ? (
         <section className="card space-y-1 text-sm">

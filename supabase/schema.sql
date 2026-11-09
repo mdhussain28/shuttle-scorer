@@ -250,6 +250,72 @@ create policy "user sees own account" on public.app_users for select to authenti
   using (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
+-- Public live view (version 5)
+-- Anyone with the link can watch public tournaments without signing in, read only.
+--   * tournaments.is_public: the admin switches a whole tournament on or off.
+--   * matches.is_public: the admin chooses which matches the public may see.
+--     A private match is hidden completely, including from the public points table.
+-- Accounts, umpire assignments and casual matches are never public.
+-- ---------------------------------------------------------------------------
+
+alter table public.tournaments add column if not exists is_public boolean not null default true;
+alter table public.matches     add column if not exists is_public boolean not null default true;
+
+create or replace function public.is_public_tournament(tid uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.tournaments t where t.id = tid and t.is_public)
+$$;
+
+create or replace function public.is_public_category(cid uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.categories c
+    join public.tournaments t on t.id = c.tournament_id
+    where c.id = cid and t.is_public
+  )
+$$;
+
+drop policy if exists "public read" on public.tournaments;
+create policy "public read" on public.tournaments for select to anon
+  using (is_public);
+
+drop policy if exists "public read" on public.categories;
+create policy "public read" on public.categories for select to anon
+  using (public.is_public_tournament(tournament_id));
+
+drop policy if exists "public read" on public.pools;
+create policy "public read" on public.pools for select to anon
+  using (public.is_public_category(category_id));
+
+drop policy if exists "public read" on public.entries;
+create policy "public read" on public.entries for select to anon
+  using (public.is_public_category(category_id));
+
+drop policy if exists "public read" on public.matches;
+create policy "public read" on public.matches for select to anon
+  using (tournament_id is not null and is_public and public.is_public_tournament(tournament_id));
+
+-- Users can score matches but cannot change who may see them.
+create or replace function public.guard_match_visibility() returns trigger
+language plpgsql as $$
+begin
+  if public.is_umpire() then
+    if tg_op = 'INSERT' then
+      new.is_public := true;
+    elsif new.is_public is distinct from old.is_public then
+      new.is_public := old.is_public;
+    end if;
+  end if;
+  return new;
+end
+$$;
+
+drop trigger if exists trg_guard_match_visibility on public.matches;
+create trigger trg_guard_match_visibility
+  before insert or update on public.matches
+  for each row execute function public.guard_match_visibility();
+
+-- ---------------------------------------------------------------------------
 -- Optional: run the 3-month cleanup inside Supabase instead of the Vercel cron job.
 -- Enable the pg_cron extension (Database -> Extensions), then uncomment:
 --

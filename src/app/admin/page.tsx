@@ -6,6 +6,7 @@ import { Shell } from "@/components/Shell";
 import { Icon } from "@/components/Icon";
 import { Segmented } from "@/components/Segmented";
 import { AdminOverview } from "@/components/admin/AdminOverview";
+import { DataCleanup } from "@/components/admin/DataCleanup";
 import { AdminTournaments } from "@/components/admin/AdminTournaments";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { fetchUsers } from "@/lib/adminApi";
@@ -98,7 +99,17 @@ function AdminContent() {
 
       {err && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{err}</p>}
 
-      {tab === "overview" && <AdminOverview tournaments={tournaments} matches={matches} users={users} />}
+      {tab === "overview" && (
+        <>
+          <AdminOverview tournaments={tournaments} matches={matches} users={users} />
+          <DataCleanup
+            tournaments={tournaments.length}
+            matches={matches.length}
+            casual={matches.filter((m) => m.tournament_id === null).length}
+            onDone={load}
+          />
+        </>
+      )}
       {tab === "users" && <AdminUsers users={users} tournaments={tournaments} meId={meId} onChanged={load} />}
       {tab === "tournaments" && (
         <AdminTournaments

@@ -86,6 +86,13 @@ export function Shell({
           )}
           <h1 className="min-w-0 flex-1 truncate text-base font-semibold">{title}</h1>
           {actions}
+          <Link
+            href="/watch"
+            className="flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-sm text-neutral-600 transition hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          >
+            <Icon name="radio" size={16} />
+            <span className="hidden sm:inline">Live view</span>
+          </Link>
           {role.isAdmin && (
             <Link
               href="/admin"

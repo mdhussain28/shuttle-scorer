@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Shell } from "@/components/Shell";
 import { CourtView } from "@/components/CourtView";
 import { Icon } from "@/components/Icon";
+import { FlipNumber } from "@/components/FlipNumber";
 import { getSupabase } from "@/lib/supabase";
 import { useRole } from "@/lib/useRole";
 import type { MatchRow } from "@/lib/types";
@@ -24,6 +25,8 @@ function MatchContent({ id }: { id: string }) {
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [nextRight, setNextRight] = useState<{ a: PlayerIndex; b: PlayerIndex }>({ a: 0, b: 0 });
   const [crumb, setCrumb] = useState<string[]>([]);
+  const [isPublic, setIsPublic] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const latest = useRef<MatchEvent[]>([]);
   const configRef = useRef<MatchRow["config"] | null>(null);
@@ -41,6 +44,7 @@ function MatchContent({ id }: { id: string }) {
         setEvents(row.events ?? []);
         latest.current = row.events ?? [];
         configRef.current = row.config;
+        setIsPublic(row.is_public !== false);
 
         // Breadcrumb: tournament, category and round (best effort).
         const parts: string[] = [];
@@ -174,6 +178,30 @@ function MatchContent({ id }: { id: string }) {
     };
   }, []);
 
+  async function toggleVisibility() {
+    const next = !isPublic;
+    const { error } = await getSupabase().from("matches").update({ is_public: next }).eq("id", id);
+    if (error) {
+      setLoadError(
+        error.message.includes("column")
+          ? `${error.message}. Run the latest supabase/schema.sql in the Supabase SQL Editor.`
+          : error.message,
+      );
+      return;
+    }
+    setIsPublic(next);
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/watch/m/${id}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard not available */
+    }
+  }
+
   async function deleteMatch() {
     if (!confirm("Delete this match and its score? This cannot be undone.")) return;
     const { error } = await getSupabase().from("matches").delete().eq("id", id);
@@ -215,12 +243,12 @@ function MatchContent({ id }: { id: string }) {
           <span className="truncate">{labels[side]}</span>
         </div>
         {doubles && <div className="max-w-full truncate text-xs text-slate-400">{names[side].join(" & ")}</div>}
-        <div key={state.scores[side]} className="animate-pop text-7xl font-bold leading-none tabular-nums text-white sm:text-8xl">{state.scores[side]}</div>
+        <FlipNumber value={state.scores[side]} className="text-7xl sm:text-8xl" />
         <div className="flex min-h-[1.5rem] items-center">
           {inSet && state.matchPoint[side] ? (
-            <span className="rounded-md bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">Match point</span>
+            <span className="animate-slide rounded-full bg-red-500/20 px-3 py-0.5 text-xs font-semibold text-red-300 ring-1 ring-red-400/30">Match point</span>
           ) : inSet && state.setPoint[side] ? (
-            <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-300">Set point</span>
+            <span className="animate-slide rounded-full bg-amber-500/20 px-3 py-0.5 text-xs font-semibold text-amber-300 ring-1 ring-amber-400/30">Set point</span>
           ) : null}
         </div>
         <button
@@ -259,6 +287,28 @@ function MatchContent({ id }: { id: string }) {
         </Link>
         {crumb.length > 0 && <span className="min-w-0 flex-1 truncate text-neutral-500">{crumb.join(" · ")}</span>}
         {crumb.length === 0 && <span className="flex-1" />}
+        {match.tournament_id && !role.isUmpire && (
+          <>
+            <button
+              className={`btn btn-sm ${isPublic ? "btn-secondary" : "btn-ghost"}`}
+              onClick={() => void toggleVisibility()}
+              title={
+                isPublic
+                  ? "Visible on the public live page. Click to hide it."
+                  : "Hidden from the public live page. Click to show it."
+              }
+            >
+              <Icon name={isPublic ? "eye" : "eye-off"} size={14} />
+              {isPublic ? "Public" : "Private"}
+            </button>
+            {isPublic && (
+              <button className="btn btn-ghost btn-sm" onClick={() => void copyLink()} title="Copy the public link">
+                <Icon name={copied ? "check" : "link"} size={14} />
+                {copied ? "Copied" : "Link"}
+              </button>
+            )}
+          </>
+        )}
         {saveBadge}
       </div>
 

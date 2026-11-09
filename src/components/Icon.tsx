@@ -9,7 +9,7 @@ export type IconName =
   | "layers" | "bracket" | "bolt" | "shuttle" | "play" | "info" | "user"
   | "logout" | "sliders" | "alert" | "lock" | "flag" | "swap"
   | "users" | "user-plus" | "shield" | "grid" | "calendar" | "key" | "mail"
-  | "search" | "copy" | "eye" | "activity" | "refresh";
+  | "search" | "copy" | "eye" | "eye-off" | "activity" | "refresh" | "link" | "radio" | "globe";
 
 const SHAPES: Record<IconName, ReactNode> = {
   "arrow-left": <path d="M19 12H5M12 19l-7-7 7-7" />,
@@ -119,6 +119,25 @@ const SHAPES: Record<IconName, ReactNode> = {
     <>
       <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
       <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  "eye-off": (
+    <>
+      <path d="M3 3l18 18M10.6 5.1A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.5 6.6C3.7 8.4 2 12 2 12s3.5 7 10 7a10 10 0 0 0 4.4-1" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </>
+  ),
+  link: <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" />,
+  radio: (
+    <>
+      <circle cx="12" cy="12" r="2" />
+      <path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.6 2.5 4 5.6 4 9s-1.4 6.5-4 9c-2.6-2.5-4-5.6-4-9s1.4-6.5 4-9z" />
     </>
   ),
   activity: <path d="M3 12h4l3-8 4 16 3-8h4" />,

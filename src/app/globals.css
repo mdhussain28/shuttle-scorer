@@ -118,17 +118,6 @@
   transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
 @keyframes rise {
   from {
     opacity: 0;
@@ -138,4 +127,142 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* ---------- Flip-card numbers (scoreboard) ---------- */
+.flip {
+  position: relative;
+  display: inline-block;
+  width: 0.7em;
+  height: 1.1em;
+  perspective: 7em;
+  color: #fff;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  filter: drop-shadow(0 0.06em 0.08em rgb(0 0 0 / 0.35));
+}
+.flip::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0.025em;
+  transform: translateY(-50%);
+  background: rgb(2 6 23 / 0.75);
+  z-index: 6;
+}
+.flip-half,
+.flip-leaf {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+.flip-half > span,
+.flip-leaf > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 200%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flip-top,
+.flip-leaf-top {
+  top: 0;
+  border-radius: 0.1em 0.1em 0 0;
+  background-image: linear-gradient(#2b3a52, #1d2a40);
+}
+.flip-top > span,
+.flip-leaf-top > span {
+  top: 0;
+}
+.flip-bottom,
+.flip-leaf-bottom {
+  bottom: 0;
+  border-radius: 0 0 0.1em 0.1em;
+  background-image: linear-gradient(#18233a, #101a2d);
+}
+.flip-bottom > span,
+.flip-leaf-bottom > span {
+  bottom: 0;
+}
+.flip-leaf-top {
+  z-index: 4;
+  transform-origin: 50% 100%;
+  animation: flipTop 0.3s ease-in both;
+}
+.flip-leaf-bottom {
+  z-index: 3;
+  transform-origin: 50% 0;
+  transform: rotateX(90deg);
+  animation: flipBottom 0.3s ease-out 0.3s both;
+}
+@keyframes flipTop {
+  to {
+    transform: rotateX(-90deg);
+  }
+}
+@keyframes flipBottom {
+  from {
+    transform: rotateX(90deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+.flip-group {
+  display: inline-flex;
+  gap: 0.07em;
+}
+
+/* ---------- Loading skeleton ---------- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: rgb(148 163 184 / 0.18);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  animation: shimmer 1.4s infinite;
+}
+@media (prefers-color-scheme: dark) {
+  .skeleton::after {
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.08), transparent);
+  }
+}
+
+/* ---------- Live indicator ---------- */
+.live-dot {
+  position: relative;
+  display: inline-block;
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+  background: #ef4444;
+}
+.live-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: #ef4444;
+  animation: ping2 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ---------- Animated gradient surfaces ---------- */
+.hero-surface {
+  background-image: linear-gradient(115deg, #061744, #0f3f9e 40%, #1a52c4 60%, #061744);
+  background-size: 200% 100%;
+  animation: sheen 10s linear infinite;
 }

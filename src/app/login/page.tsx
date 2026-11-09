@@ -142,6 +142,13 @@ export default function LoginPage() {
       {mode === "user" && (
         <p className="mt-4 text-center text-xs text-neutral-500">Use the email and password your admin gave you.</p>
       )}
+      <a
+        href="/watch"
+        className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white/70 px-4 py-3 text-sm font-semibold text-brand-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] dark:border-neutral-700 dark:bg-neutral-900/70 dark:text-brand-300"
+      >
+        <span className="live-dot" />
+        Watch live scores without signing in
+      </a>
     </main>
   );
 }

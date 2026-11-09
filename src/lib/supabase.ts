@@ -21,3 +21,25 @@ export function getSupabase(): SupabaseClient {
 export function errorText(error: { message: string } | null | undefined): string | null {
   return error ? error.message : null;
 }
+
+let publicClient: SupabaseClient | null = null;
+
+/**
+ * Read-only client for the public live pages. It never signs in, so the database treats it as an
+ * anonymous visitor even when an admin or user is signed in on the same browser.
+ */
+export function getPublicSupabase(): SupabaseClient {
+  if (!publicClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) {
+      throw new Error(
+        "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+      );
+    }
+    publicClient = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "shuttle-public" },
+    });
+  }
+  return publicClient;
+}
