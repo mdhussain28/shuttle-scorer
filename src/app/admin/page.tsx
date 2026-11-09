@@ -69,8 +69,8 @@ function AdminContent() {
         </span>
         <p className="font-semibold">Admins only</p>
         <p className="text-sm text-neutral-500">Your account does not have access to the admin console.</p>
-        <Link href="/" className="btn btn-primary">
-          Back to home
+        <Link href="/dashboard" className="btn btn-primary">
+          Back to dashboard
         </Link>
       </div>
     );
@@ -126,7 +126,7 @@ function AdminContent() {
 
 export default function AdminPage() {
   return (
-    <Shell title="Admin console" back="/">
+    <Shell title="Admin console" back="/dashboard">
       <AdminContent />
     </Shell>
   );

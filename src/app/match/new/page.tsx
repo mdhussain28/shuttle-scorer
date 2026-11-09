@@ -177,7 +177,7 @@ function SetupContent() {
     router.push(`/match/${data.id}`);
   }
 
-  const cancelHref = category ? `/tournaments/${category.tournament_id}` : "/";
+  const cancelHref = category ? `/tournaments/${category.tournament_id}` : "/dashboard";
   const context = stage
     ? stage === "final" || stage === "third"
       ? STAGE_LABEL[stage]
@@ -428,7 +428,7 @@ function SetupContent() {
 
 export default function NewMatchPage() {
   return (
-    <Shell title="New match" back="/">
+    <Shell title="New match" back="/dashboard">
       <Suspense fallback={<p className="text-sm text-neutral-500">Loading…</p>}>
         <SetupContent />
       </Suspense>

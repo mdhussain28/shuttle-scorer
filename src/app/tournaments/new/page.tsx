@@ -10,7 +10,7 @@ function NewTournamentForm() {
   const router = useRouter();
   const role = useRole();
   useEffect(() => {
-    if (role.isUmpire) router.replace("/");
+    if (role.isUmpire) router.replace("/dashboard");
   }, [role.isUmpire, router]);
   const [name, setName] = useState("");
   const [venue, setVenue] = useState("");
@@ -100,7 +100,7 @@ function NewTournamentForm() {
 
 export default function NewTournamentPage() {
   return (
-    <Shell title="New tournament" back="/">
+    <Shell title="New tournament" back="/dashboard">
       <NewTournamentForm />
     </Shell>
   );

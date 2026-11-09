@@ -175,7 +175,7 @@ export default function WatchTournament() {
 
   if (missing) {
     return (
-      <PublicShell title="Tournament" back={{ href: "/watch", label: "Back to live scores" }}>
+      <PublicShell title="Tournament" back={{ href: "/", label: "Back to live scores" }}>
         <div className="card mx-auto max-w-md space-y-3 text-center">
           <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 dark:bg-neutral-800">
             <Icon name="eye-off" size={20} />
@@ -189,7 +189,7 @@ export default function WatchTournament() {
 
   if (!loaded || !t) {
     return (
-      <PublicShell title="Tournament" back={{ href: "/watch", label: "Back to live scores" }}>
+      <PublicShell title="Tournament" back={{ href: "/", label: "Back to live scores" }}>
         <SkeletonList rows={4} />
       </PublicShell>
     );
@@ -203,7 +203,7 @@ export default function WatchTournament() {
     }`;
 
   return (
-    <PublicShell title={t.name} back={{ href: "/watch", label: "Back to live scores" }}>
+    <PublicShell title={t.name} back={{ href: "/", label: "Back to live scores" }}>
       <div className="space-y-7">
         <Hero title={t.name} subtitle={[t.venue, fmtDate(t.start_date)].filter(Boolean).join(" · ") || undefined}>
           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -225,7 +225,7 @@ export default function WatchTournament() {
         {live.length > 0 && (
           <section>
             <h2 className="section-title mb-3">Playing now</h2>
-            <div className="stagger grid gap-3 sm:grid-cols-2">
+            <div className="stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {live.map((m) => (
                 <LiveMatchCard key={m.id} m={card(m)} context={catName(m.category_id)} />
               ))}
@@ -367,7 +367,7 @@ export default function WatchTournament() {
               {shownMatches.length === 0 ? (
                 <div className="card text-center text-sm text-neutral-500">No matches to show yet.</div>
               ) : (
-                <div className="stagger grid gap-3 sm:grid-cols-2">
+                <div className="stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {shownMatches.map((m) => (
                     <LiveMatchCard
                       key={m.id}

@@ -35,7 +35,7 @@ export default function LoginPage() {
       getSupabase()
         .auth.getSession()
         .then(({ data }) => {
-          if (data.session) router.replace("/");
+          if (data.session) router.replace("/dashboard");
         });
     } catch (e) {
       setErr((e as Error).message);
@@ -80,7 +80,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.replace("/");
+      router.replace("/dashboard");
     } catch (e) {
       setErr((e as Error).message);
       setBusy(false);
@@ -143,7 +143,7 @@ export default function LoginPage() {
         <p className="mt-4 text-center text-xs text-neutral-500">Use the email and password your admin gave you.</p>
       )}
       <a
-        href="/watch"
+        href="/"
         className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white/70 px-4 py-3 text-sm font-semibold text-brand-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] dark:border-neutral-700 dark:bg-neutral-900/70 dark:text-brand-300"
       >
         <span className="live-dot" />

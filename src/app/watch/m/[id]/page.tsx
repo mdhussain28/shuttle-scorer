@@ -59,18 +59,18 @@ export default function WatchMatch() {
     }
   }, [match]);
 
-  const back = match?.tournament_id ? { href: `/watch/t/${match.tournament_id}`, label: "Back to tournament" } : { href: "/watch", label: "Back to live scores" };
+  const back = match?.tournament_id ? { href: `/watch/t/${match.tournament_id}`, label: "Back to tournament" } : { href: "/", label: "Back to live scores" };
 
   if (missing) {
     return (
-      <PublicShell title="Match" back={{ href: "/watch", label: "Back to live scores" }}>
+      <PublicShell title="Match" back={{ href: "/", label: "Back to live scores" }}>
         <div className="card mx-auto max-w-md space-y-3 text-center">
           <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 dark:bg-neutral-800">
             <Icon name="eye-off" size={20} />
           </span>
           <p className="font-semibold">This match is not available</p>
           <p className="text-sm text-neutral-500">It may be private, or it has been removed.</p>
-          <Link href="/watch" className="btn btn-primary">
+          <Link href="/" className="btn btn-primary">
             See live scores
           </Link>
         </div>
@@ -80,7 +80,7 @@ export default function WatchMatch() {
 
   if (!match || !state) {
     return (
-      <PublicShell title="Match" back={{ href: "/watch", label: "Back to live scores" }}>
+      <PublicShell title="Match" back={{ href: "/", label: "Back to live scores" }}>
         <SkeletonList rows={3} />
       </PublicShell>
     );
@@ -94,7 +94,7 @@ export default function WatchMatch() {
 
   return (
     <PublicShell title={`${match.a_label} vs ${match.b_label}`} back={back}>
-      <div className="space-y-4">
+      <div className="mx-auto max-w-3xl space-y-4">
         <div className="flex items-center gap-2 text-xs text-neutral-500">
           <span className="min-w-0 flex-1 truncate">{crumb}</span>
           {updated && <span>Updated {updated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}

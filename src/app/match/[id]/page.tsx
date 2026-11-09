@@ -206,7 +206,7 @@ function MatchContent({ id }: { id: string }) {
     if (!confirm("Delete this match and its score? This cannot be undone.")) return;
     const { error } = await getSupabase().from("matches").delete().eq("id", id);
     if (error) return setLoadError(error.message);
-    router.replace(match?.tournament_id ? `/tournaments/${match.tournament_id}` : "/");
+    router.replace(match?.tournament_id ? `/tournaments/${match.tournament_id}` : "/dashboard");
   }
 
   if (loading) return <p className="text-sm text-neutral-500">Loading…</p>;
@@ -226,8 +226,8 @@ function MatchContent({ id }: { id: string }) {
 
   const serverName = names[state.server.side][state.server.playerIndex];
   const receiverName = names[state.receiver.side][state.receiver.playerIndex];
-  const backHref = match.tournament_id ? `/tournaments/${match.tournament_id}` : "/";
-  const backLabel = match.stage ? "Back to bracket" : match.tournament_id ? "Back to tournament" : "Back to home";
+  const backHref = match.tournament_id ? `/tournaments/${match.tournament_id}` : "/dashboard";
+  const backLabel = match.stage ? "Back to bracket" : match.tournament_id ? "Back to tournament" : "Back to dashboard";
 
   const renderSide = (side: Side) => {
     const serving = inSet && state.server.side === side;
@@ -283,7 +283,7 @@ function MatchContent({ id }: { id: string }) {
       <div className="flex items-center gap-2 text-xs">
         <Link href={backHref} className="inline-flex items-center gap-1 font-medium text-brand-700 hover:underline dark:text-brand-400">
           <Icon name="arrow-left" size={14} />
-          {match.tournament_id ? "Tournament" : "Home"}
+          {match.tournament_id ? "Tournament" : "Dashboard"}
         </Link>
         {crumb.length > 0 && <span className="min-w-0 flex-1 truncate text-neutral-500">{crumb.join(" · ")}</span>}
         {crumb.length === 0 && <span className="flex-1" />}
@@ -429,7 +429,7 @@ function MatchContent({ id }: { id: string }) {
 export default function MatchPage() {
   const params = useParams<{ id: string }>();
   return (
-    <Shell title="Match" back="/">
+    <Shell title="Match" back="/dashboard">
       <MatchContent id={params.id} />
     </Shell>
   );

@@ -103,7 +103,7 @@ function TournamentContent({ id }: { id: string }) {
     if (!confirm(`Delete "${t.name}" with all its categories, teams and matches? This cannot be undone.`)) return;
     const { error } = await getSupabase().from("tournaments").delete().eq("id", id);
     if (error) return setErr(error.message);
-    router.replace("/");
+    router.replace("/dashboard");
   }
 
   if (loading || role.loading) return <p className="text-sm text-neutral-500">Loading…</p>;
@@ -293,7 +293,7 @@ function TournamentContent({ id }: { id: string }) {
 export default function TournamentPage() {
   const params = useParams<{ id: string }>();
   return (
-    <Shell title="Tournament" back="/">
+    <Shell title="Tournament" back="/dashboard">
       <TournamentContent id={params.id} />
     </Shell>
   );

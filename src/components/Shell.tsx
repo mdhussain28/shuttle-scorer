@@ -72,7 +72,7 @@ export function Shell({
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-neutral-200/70 bg-white/80 shadow-sm shadow-neutral-900/5 backdrop-blur-xl dark:border-neutral-800 dark:bg-neutral-900/80">
-        <div className="mx-auto flex h-14 max-w-4xl items-center gap-3 px-4">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           {back ? (
             <Link
               href={back}
@@ -87,11 +87,11 @@ export function Shell({
           <h1 className="min-w-0 flex-1 truncate text-base font-semibold">{title}</h1>
           {actions}
           <Link
-            href="/watch"
+            href="/"
             className="flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-sm text-neutral-600 transition hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             <Icon name="radio" size={16} />
-            <span className="hidden sm:inline">Live view</span>
+            <span className="hidden sm:inline">Public page</span>
           </Link>
           {role.isAdmin && (
             <Link
@@ -117,7 +117,7 @@ export function Shell({
           </button>
         </div>
       </header>
-      <main className="mx-auto max-w-4xl animate-rise px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-6xl animate-rise px-4 py-6 sm:px-6">{children}</main>
     </>
   );
 }

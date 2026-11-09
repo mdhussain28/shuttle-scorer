@@ -15,7 +15,7 @@ Badminton tournament and match scoring. Next.js (App Router) + Supabase, built t
 - **Tie-break rules are selectable** per tournament: for two level teams use head-to-head or a decider match; for three or more use set and points difference or decider matches.
 - **Knockout stage**: when every pool match is played, choose semi-finals or quarter-finals. The app maps the teams across pools (for example Group A winner vs Group B runner-up), builds the bracket, and moves winners forward through the final and third-place match.
 - **Admin console and roles**: sign in as Admin or User. Admins have full rights, see every tournament and manage accounts (create, assign to tournaments, reset passwords, delete, and set an automatic deletion time). Users score matches only in the tournaments assigned to them.
-- **Public live page** (`/watch`): anyone can follow live matches (flip-card scores, who is serving), recent results and each tournament without signing in. Visitors pick a category and a pool, see the points table with a qualification line, and can search for their team or player to see whether they are in a qualifying place. Admins switch a whole tournament public or private, and choose which individual matches are public (the eye button).
+- **Public home page** (`/`, the landing page with a Login button; staff work in `/dashboard`): anyone can follow live matches (flip-card scores, who is serving), recent results and each tournament without signing in. Visitors pick a category and a pool, see the points table with a qualification line, and can search for their team or player to see whether they are in a qualifying place. Admins switch a whole tournament public or private, and choose which individual matches are public (the eye button).
 - Tournament data (and casual matches) are deleted automatically **3 months** after creation.
 
 ## 1. Set up Supabase (5 minutes)
@@ -44,7 +44,7 @@ Needs `SUPABASE_SERVICE_ROLE_KEY` on the server (already used by the cleanup job
 
 ### Public live page
 
-Share `https://your-site/watch` (all public tournaments) or `https://your-site/watch/t/<id>` (one tournament; the Tournament page has a copy-link button). The page is read only and refreshes by itself every few seconds. Only tournaments marked **Public** and matches marked **Public** are visible. Casual matches, user accounts and assignments are never public. A match marked **Private** is hidden completely, including from the public points table, so use it deliberately. This needs the latest `supabase/schema.sql`.
+Share `https://your-site/` (the home page lists all public tournaments) or `https://your-site/watch/t/<id>` (one tournament; the Tournament page has a copy-link button). The page is read only and refreshes by itself every few seconds. Only tournaments marked **Public** and matches marked **Public** are visible. Casual matches, user accounts and assignments are never public. A match marked **Private** is hidden completely, including from the public points table, so use it deliberately. This needs the latest `supabase/schema.sql`.
 
 ## 2. Run it locally (optional)
 
