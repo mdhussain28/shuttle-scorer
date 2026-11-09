@@ -1,16 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Roboto } from "next/font/google";
 import "./globals.css";
 import { RegisterSW } from "@/components/RegisterSW";
-
-// Roboto is bundled at build time, so every phone and computer shows the same font.
-const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  variable: "--font-roboto",
-});
 
 export const metadata: Metadata = {
   title: "Shuttle Scorer",
@@ -34,7 +25,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={roboto.variable}>
+    <html lang="en">
+      <head>
+        {/* Loaded in the browser, so the build never depends on downloading a font. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+        />
+      </head>
       <body>
         {children}
         <RegisterSW />
